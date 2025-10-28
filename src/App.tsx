@@ -1,27 +1,24 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
+import type { Component } from "solid-js";
 
-const queryClient = new QueryClient();
+import { ChessBoard } from "./components/ChessBoard";
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+import "./app.css";
+
+const App: Component = () => {
+  return (
+    <main class="flex h-full flex-wrap justify-center gap-4 overflow-auto p-4">
+      <h1 class="flex basis-full justify-center gap-6 text-5xl font-black">Chess</h1>
+      <ChessBoard />
+      <footer class="flex basis-full items-end justify-center p-4 text-sm text-neutral-400">
+        <span class="whitespace-nowrap">
+          Made by{" "}
+          <a href="https://github.com/lcasviana" target="_blank" class="text-neutral-50 underline">
+            Lucas Viana
+          </a>
+        </span>
+      </footer>
+    </main>
+  );
+};
 
 export default App;
