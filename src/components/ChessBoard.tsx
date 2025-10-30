@@ -286,9 +286,9 @@ export const ChessBoard = ({}: ChessBoardProps) => {
     let squareClass = "aspect-square flex items-center justify-center text-5xl cursor-pointer select-none transition-all relative";
 
     if (isLight) {
-      squareClass += " bg-[hsl(var(--square-light))]";
+      squareClass += " bg-neutral-300";
     } else {
-      squareClass += " bg-[hsl(var(--square-dark))]";
+      squareClass += " bg-neutral-500";
     }
 
     if (isSelected) {
@@ -296,16 +296,16 @@ export const ChessBoard = ({}: ChessBoardProps) => {
     }
 
     if (isLastMoveSquare) {
-      squareClass += " bg-[hsl(var(--square-last-move))]";
+      squareClass += " bg-yellow-200";
     }
 
     if (isKingInCheck) {
-      squareClass += " bg-[hsl(var(--square-check))] animate-pulse";
+      squareClass += " bg-red-900 animate-pulse";
     }
 
     return (
       <div class={squareClass} onClick={() => handleSquareClick(square)}>
-        {piece && !isAnimatingFrom && <ChessPiece type={piece.type} color={piece.color} className="z-10" />}
+        {piece && !isAnimatingFrom && <ChessPiece type={piece.type} color={piece.color} />}
         {isValidMove && !piece && <div class="bg-primary absolute h-3 w-3 rounded-full opacity-50" />}
         {isCapture && <div class="border-primary absolute inset-2 rounded-full border-4 opacity-50" />}
       </div>
@@ -317,7 +317,7 @@ export const ChessBoard = ({}: ChessBoardProps) => {
   const ranks = playerColor() === "w" ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8];
 
   return (
-    <div class="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_center,hsl(var(--bg-gradient-start)),hsl(var(--bg-gradient-end)))] p-4">
+    <div class="flex h-full items-center justify-center p-4">
       <div class="flex w-full max-w-6xl items-start gap-6">
         {/* White captured pieces (left) */}
         {gameStarted() && (
@@ -394,7 +394,7 @@ export const ChessBoard = ({}: ChessBoardProps) => {
               </div>
 
               {/* Chess board */}
-              <div class="relative grid w-[min(70vmin,600px)] grid-cols-8 gap-0 shadow-2xl">
+              <div class="relative grid w-[min(70vmin,600px)] grid-cols-8 gap-0 bg-red-500 shadow-2xl">
                 {Array.from({ length: 8 }).map((_, row) => Array.from({ length: 8 }).map((_, col) => renderSquare(row, col)))}
 
                 {/* Animating piece overlay */}
@@ -409,7 +409,7 @@ export const ChessBoard = ({}: ChessBoardProps) => {
                       transform: `translate(${(getSquarePosition(animatingMove()!.to).col - getSquarePosition(animatingMove()!.from).col) * 100}%, ${(getSquarePosition(animatingMove()!.to).row - getSquarePosition(animatingMove()!.from).row) * 100}%)`,
                     }}
                   >
-                    <ChessPiece type={animatingMove()!.piece.type} color={animatingMove()!.piece.color} className="h-full w-full" />
+                    <ChessPiece type={animatingMove()!.piece.type} color={animatingMove()!.piece.color} />
                   </div>
                 )}
               </div>

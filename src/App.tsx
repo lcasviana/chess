@@ -6,7 +6,7 @@ import "./app.css";
 
 const App: Component = () => {
   return (
-    <main class="flex h-full flex-wrap justify-center gap-4 overflow-auto p-4">
+    <main class="grid size-full grid-rows-[auto_1fr_auto] justify-center gap-4 overflow-auto p-4">
       <h1 class="flex basis-full justify-center gap-6 text-5xl font-black">Chess</h1>
       <ChessBoard />
       <footer class="flex basis-full items-end justify-center p-4 text-sm text-neutral-400">

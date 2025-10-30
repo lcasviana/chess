@@ -11,7 +11,7 @@ export default createHandler(() => (
           <title>Chess</title>
           {assets}
         </head>
-        <body class="h-dvh w-dvw overflow-auto bg-neutral-950 text-neutral-50 antialiased">
+        <body class="h-dvh w-dvw overflow-auto bg-radial from-neutral-700 from-0% to-neutral-900 to-75% text-neutral-50 antialiased">
           <div id="app" class="size-full overflow-auto">
             {children}
           </div>
