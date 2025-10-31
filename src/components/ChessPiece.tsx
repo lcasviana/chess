@@ -1,20 +1,21 @@
-interface ChessPieceProps {
-  type: "p" | "n" | "b" | "r" | "q" | "k";
-  color: "w" | "b";
-}
+import type { Color, Piece } from "chess.js";
+import type { Component } from "solid-js";
 
-export const ChessPiece = ({ type, color }: ChessPieceProps) => {
-  const piece = { p: "pawn", n: "knight", b: "bishop", r: "rook", q: "queen", k: "king" };
+type ChessPieceProps = {
+  piece: Piece;
+  size?: number;
+};
+
+const classes: Record<Color, string> = {
+  w: "fill-white drop-shadow-black",
+  b: "fill-black drop-shadow-white",
+};
+
+export const ChessPiece: Component<ChessPieceProps> = ({ piece, size = 48 }) => {
+  const { color, type } = piece;
   return (
-    <div class="transition-all duration-300 ease-out">
-      <svg
-        class="drop-shadow-2xl"
-        classList={{ "fill-white drop-shadow-black/50": color === "w", "fill-black drop-shadow-white/50": color === "b" }}
-        height={48}
-        width={48}
-      >
-        <use href={`./chess.svg#${piece[type]}`} />
-      </svg>
-    </div>
+    <svg class={`drop-shadow-xs ${classes[color]}`} height={size} width={size}>
+      <use href={`./chess.svg#${type}`} />
+    </svg>
   );
 };
