@@ -26,7 +26,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
   const [currentMoveIndex, setCurrentMoveIndex] = createSignal(0);
   const [gameStarted, setGameStarted] = createSignal(false);
   const [playerColor, setPlayerColor] = createSignal<"w" | "b">("w");
-  const [animatingMove, setAnimatingMove] = createSignal<{ from: Square; to: Square; piece: { type: PieceSymbol; color: "w" | "b" } } | null>(null);
 
   const isViewingHistory = () => currentMoveIndex() < gameHistory().length - 1;
 
@@ -134,9 +133,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
           });
 
           if (move) {
-            // Trigger animation
-            setAnimatingMove({ from: selectedSquare()!, to: square, piece });
-
             setTimeout(() => {
               const newHistory = [
                 ...gameHistory(),
@@ -152,7 +148,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
               setCurrentMoveIndex(newHistory.length - 1);
               setLastMove({ from: selectedSquare()!, to: square });
               setGame(new Chess(game().fen()));
-              setAnimatingMove(null);
 
               setTimeout(() => makeAiMove(), 500);
             }, 300);
@@ -185,8 +180,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
           const toSquare = move.to as Square;
           const piece = { type: move.piece as PieceSymbol, color: move.color };
 
-          setAnimatingMove({ from: fromSquare, to: toSquare, piece });
-
           setTimeout(() => {
             const newHistory = [
               ...gameHistory(),
@@ -202,7 +195,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
             setCurrentMoveIndex(newHistory.length - 1);
             setLastMove({ from: move.from as Square, to: move.to as Square });
             setGame(new Chess(game().fen()));
-            setAnimatingMove(null);
             setIsAiThinking(false);
           }, 300);
         } else {
@@ -223,7 +215,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
     setGameHistory([{ fen: newGame.fen(), move: "Start", capturedPiece: undefined, lastMove: null }]);
     setCurrentMoveIndex(0);
     setGameStarted(false);
-    setAnimatingMove(null);
   };
 
   const goToPreviousMove = () => {
@@ -280,8 +271,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
     const isLastMoveSquare = lastMove() && (lastMove()?.from === square || lastMove()?.to === square);
     const isKingInCheck = piece?.type === "k" && piece.color === game().turn() && game().isCheck();
     const isCapture = isValidMove && piece;
-    const isAnimatingFrom = animatingMove()?.from === square;
-    const isAnimatingTo = animatingMove()?.to === square;
 
     let squareClass = "aspect-square flex items-center justify-center text-5xl cursor-pointer select-none transition-all relative";
 
@@ -305,7 +294,7 @@ export const ChessBoard = ({}: ChessBoardProps) => {
 
     return (
       <div class={squareClass} onClick={() => handleSquareClick(square)}>
-        {piece && !isAnimatingFrom && <ChessPiece type={piece.type} color={piece.color} />}
+        {piece && <ChessPiece piece={piece} />}
         {isValidMove && !piece && <div class="bg-primary absolute h-3 w-3 rounded-full opacity-50" />}
         {isCapture && <div class="border-primary absolute inset-2 rounded-full border-4 opacity-50" />}
       </div>
@@ -327,7 +316,7 @@ export const ChessBoard = ({}: ChessBoardProps) => {
               <div class="flex min-h-[60px] flex-wrap gap-2">
                 {capturedPieces.white.map((piece, idx) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece type={piece.type} color={piece.color} />
+                    <ChessPiece piece={piece} />
                   </div>
                 ))}
               </div>
@@ -396,22 +385,6 @@ export const ChessBoard = ({}: ChessBoardProps) => {
               {/* Chess board */}
               <div class="relative grid w-[min(70vmin,600px)] grid-cols-8 gap-0 bg-red-500 shadow-2xl">
                 {Array.from({ length: 8 }).map((_, row) => Array.from({ length: 8 }).map((_, col) => renderSquare(row, col)))}
-
-                {/* Animating piece overlay */}
-                {animatingMove() && (
-                  <div
-                    class="pointer-events-none absolute z-50 transition-transform duration-300 ease-out"
-                    style={{
-                      width: "calc(100% / 8)",
-                      height: "calc(100% / 8)",
-                      left: `${getSquarePosition(animatingMove()!.from).col * 12.5}%`,
-                      top: `${getSquarePosition(animatingMove()!.from).row * 12.5}%`,
-                      transform: `translate(${(getSquarePosition(animatingMove()!.to).col - getSquarePosition(animatingMove()!.from).col) * 100}%, ${(getSquarePosition(animatingMove()!.to).row - getSquarePosition(animatingMove()!.from).row) * 100}%)`,
-                    }}
-                  >
-                    <ChessPiece type={animatingMove()!.piece.type} color={animatingMove()!.piece.color} />
-                  </div>
-                )}
               </div>
 
               {/* Right rank numbers */}
@@ -493,7 +466,7 @@ export const ChessBoard = ({}: ChessBoardProps) => {
               <div class="flex min-h-[60px] flex-wrap gap-2">
                 {capturedPieces.black.map((piece, idx) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece type={piece.type} color={piece.color} />
+                    <ChessPiece piece={piece} />
                   </div>
                 ))}
               </div>
