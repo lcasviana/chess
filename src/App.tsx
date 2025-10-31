@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 
-import { ChessBoard } from "./components/ChessBoard";
+import { ChessGame } from "./components/ChessGame";
 
 import "./app.css";
 
@@ -8,7 +8,7 @@ const App: Component = () => {
   return (
     <main class="grid size-full grid-rows-[auto_1fr_auto] justify-center gap-4 overflow-auto p-4">
       <h1 class="flex basis-full justify-center gap-6 text-5xl font-black">Chess</h1>
-      <ChessBoard />
+      <ChessGame />
       <footer class="flex basis-full items-end justify-center p-4 text-sm text-neutral-400">
         <span class="whitespace-nowrap">
           Made by{" "}
