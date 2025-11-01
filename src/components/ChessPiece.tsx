@@ -3,13 +3,12 @@ import type { Component } from "solid-js";
 
 type ChessPieceProps = {
   piece: Piece;
-  size?: number;
 };
 
-export const ChessPiece: Component<ChessPieceProps> = ({ piece, size = 48 }) => {
+export const ChessPiece: Component<ChessPieceProps> = ({ piece }) => {
   const { color, type } = piece;
   return (
-    <svg class={`drop-shadow-xs ${classes[color]}`} height={size} width={size}>
+    <svg class={`size-3/4 drop-shadow-xs ${classes[color]}`}>
       <use href={`./chess.svg#${type}`} />
     </svg>
   );

@@ -1,98 +1,86 @@
 import type { Chess, Square } from "chess.js";
-import { type Component, For } from "solid-js";
+import { createMemo, For, Index, type Component } from "solid-js";
 
-import { ChessCell } from "./ChessSquare";
+import { ChessSquare } from "./ChessSquare";
 
 interface ChessBoardProps {
   game: Chess;
-  playerColor: "w" | "b";
+  flip: boolean;
   onSquareClick: (square: Square) => void;
   selectedSquare: Square | null;
   validMoves: Square[];
   lastMove: { from: Square; to: Square } | null;
 }
 
+const Label = (props: { children: any }) => (
+  <div class="flex items-center justify-center text-sm font-semibold text-stone-50/50">{props.children}</div>
+);
+
 export const ChessBoard: Component<ChessBoardProps> = (props) => {
-  const files = () => (props.playerColor === "w" ? ["A", "B", "C", "D", "E", "F", "G", "H"] : ["H", "G", "F", "E", "D", "C", "B", "A"]);
+  const files = () => (!props.flip ? ["A", "B", "C", "D", "E", "F", "G", "H"] : ["H", "G", "F", "E", "D", "C", "B", "A"]);
+  const ranks = () => (!props.flip ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]);
 
-  const ranks = () => (props.playerColor === "w" ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]);
+  const board = createMemo(() => {
+    const board = Array.from({ length: 64 }, (_, i) => {
+      const row = Math.floor(i / 8);
+      const col = i % 8;
+      return `${String.fromCharCode(97 + col)}${8 - row}` as Square;
+    });
 
-  const boardRows = Array.from({ length: 8 }, (_, i) => i);
-  const boardCols = Array.from({ length: 8 }, (_, i) => i);
+    if (props.flip) {
+      board.reverse();
+    }
+    return board;
+  });
 
   return (
-    <div class="flex flex-col items-center bg-stone-800 shadow-sm shadow-neutral-950">
+    <div
+      class="grid bg-stone-800 shadow-sm shadow-neutral-950"
+      style="grid-template-columns: 24px repeat(8, calc(min(70vmin, 600px) / 8)) 24px; grid-template-rows: 24px repeat(8, calc(min(70vmin, 600px) / 8)) 24px; width: calc(min(70vmin, 600px) + 48px); height: calc(min(70vmin, 600px) + 48px);"
+    >
       {/* Top file letters */}
-      <div class="mb-1 flex">
-        <div class="w-6" />
-        <For each={files()}>
-          {(file) => (
-            <div class="flex items-center justify-center text-sm font-semibold text-stone-50/50" style={{ width: "calc(min(70vmin, 600px) / 8)" }}>
-              {file}
-            </div>
-          )}
-        </For>
-        <div class="w-6" />
+      <div class="col-start-2 col-end-10 row-start-1 row-end-2 grid grid-cols-8">
+        <For each={files()}>{(file) => <Label>{file}</Label>}</For>
       </div>
 
-      {/* Board with rank numbers */}
-      <div class="flex">
-        {/* Left rank numbers */}
-        <div class="flex flex-col justify-around pr-1">
-          <For each={ranks()}>
-            {(rank) => (
-              <div class="flex items-center justify-center text-sm font-semibold text-stone-50/50" style={{ height: "calc(min(70vmin, 600px) / 8)" }}>
-                {rank}
-              </div>
-            )}
-          </For>
-        </div>
+      {/* Left rank numbers */}
+      <div class="col-start-1 col-end-2 row-start-2 row-end-10 grid grid-rows-8">
+        <For each={ranks()}>{(rank) => <Label>{rank}</Label>}</For>
+      </div>
 
-        {/* Chess board */}
-        <div class="relative grid w-[min(70vmin,600px)] grid-cols-8 gap-0 shadow-sm shadow-neutral-950">
-          <For each={boardRows}>
-            {(row) => (
-              <For each={boardCols}>
-                {(col) => (
-                  <ChessCell
-                    row={row}
-                    col={col}
-                    playerColor={props.playerColor}
-                    game={props.game}
-                    onSquareClick={props.onSquareClick}
-                    selectedSquare={props.selectedSquare}
-                    validMoves={props.validMoves}
-                    lastMove={props.lastMove}
-                  />
-                )}
-              </For>
-            )}
-          </For>
-        </div>
+      {/* Chess board */}
+      <div class="relative col-start-2 col-end-10 row-start-2 row-end-10 grid grid-cols-8 gap-0 shadow-sm shadow-neutral-950">
+        <Index each={board()}>
+          {(square) => {
+            const sq = square();
+            const fileIndex = sq.charCodeAt(0) - 97;
+            const rankIndex = parseInt(sq.substring(1), 10) - 1;
+            const color = (fileIndex + rankIndex) % 2 !== 0 ? "light" : "dark";
 
-        {/* Right rank numbers */}
-        <div class="flex flex-col justify-around pl-1">
-          <For each={ranks()}>
-            {(rank) => (
-              <div class="flex items-center justify-center text-sm font-semibold text-stone-50/50" style={{ height: "calc(min(70vmin, 600px) / 8)" }}>
-                {rank}
-              </div>
-            )}
-          </For>
-        </div>
+            return (
+              <ChessSquare
+                square={sq}
+                piece={props.game.get(sq) ?? null}
+                color={color}
+                onClick={props.onSquareClick}
+                selected={props.selectedSquare === sq}
+                validMove={props.validMoves?.includes(sq)}
+                lastMove={!!props?.lastMove?.to}
+                inCheck={null}
+              />
+            );
+          }}
+        </Index>
+      </div>
+
+      {/* Right rank numbers */}
+      <div class="col-start-10 col-end-11 row-start-2 row-end-10 grid grid-rows-8">
+        <For each={ranks()}>{(rank) => <Label>{rank}</Label>}</For>
       </div>
 
       {/* Bottom file letters */}
-      <div class="mt-1 flex">
-        <div class="w-6" />
-        <For each={files()}>
-          {(file) => (
-            <div class="flex items-center justify-center text-sm font-semibold text-stone-50/50" style={{ width: "calc(min(70vmin, 600px) / 8)" }}>
-              {file}
-            </div>
-          )}
-        </For>
-        <div class="w-6" />
+      <div class="col-start-2 col-end-10 row-start-10 row-end-11 grid grid-cols-8">
+        <For each={files()}>{(file) => <Label>{file}</Label>}</For>
       </div>
     </div>
   );

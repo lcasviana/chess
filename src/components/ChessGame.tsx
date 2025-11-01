@@ -1,5 +1,5 @@
 import { Chess, type PieceSymbol, type Square } from "chess.js";
-import { createSignal } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { findBestMove } from "~/lib/chess-ai";
 
@@ -88,10 +88,10 @@ export const ChessGame = () => {
     return pieces.reduce((sum, piece) => sum + (pieceValues[piece.type] || 0), 0);
   };
 
-  const capturedPieces = getCapturedPieces();
-  const whitePoints = calculatePoints(capturedPieces.white);
-  const blackPoints = calculatePoints(capturedPieces.black);
-  const pointDifference = whitePoints - blackPoints;
+  const capturedPieces = createMemo(() => getCapturedPieces());
+  const whitePoints = createMemo(() => calculatePoints(capturedPieces().white));
+  const blackPoints = createMemo(() => calculatePoints(capturedPieces().black));
+  const pointDifference = createMemo(() => whitePoints() - blackPoints());
 
   const startGame = () => {
     setGameStarted(true);
@@ -227,21 +227,21 @@ export const ChessGame = () => {
   };
 
   return (
-    <div class="flex h-full items-center justify-center p-4">
-      <div class="flex w-full max-w-6xl items-start gap-6">
+    <div class="flex h-full items-center justify-center">
+      <div class="flex w-full items-start gap-6">
         {/* White captured pieces (left) */}
         {gameStarted() && (
           <div class="max-w-[200px] flex-1">
             <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
               <div class="mb-3 text-sm font-semibold text-white">White Captured</div>
               <div class="flex min-h-[60px] flex-wrap gap-2">
-                {capturedPieces.white.map((piece) => (
+                {capturedPieces().white.map((piece) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
                     <ChessPiece piece={piece} />
                   </div>
                 ))}
               </div>
-              <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {whitePoints}</div>
+              <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {whitePoints()}</div>
             </div>
           </div>
         )}
@@ -275,7 +275,7 @@ export const ChessGame = () => {
 
           <ChessBoard
             game={game()}
-            playerColor={playerColor()}
+            flip={playerColor() === "b"}
             onSquareClick={handleSquareClick}
             selectedSquare={selectedSquare()}
             validMoves={validMoves()}
@@ -283,9 +283,9 @@ export const ChessGame = () => {
           />
 
           {/* Point difference */}
-          {gameStarted() && pointDifference !== 0 && (
+          {gameStarted() && pointDifference() !== 0 && (
             <div class="animate-fade-in text-lg font-semibold">
-              {pointDifference > 0 ? `White +${pointDifference}` : `Black +${Math.abs(pointDifference)}`}
+              {pointDifference() > 0 ? `White +${pointDifference()}` : `Black +${Math.abs(pointDifference())}`}
             </div>
           )}
 
@@ -331,13 +331,13 @@ export const ChessGame = () => {
             <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
               <div class="mb-3 text-sm font-semibold text-white">Black Captured</div>
               <div class="flex min-h-[60px] flex-wrap gap-2">
-                {capturedPieces.black.map((piece) => (
+                {capturedPieces().black.map((piece) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
                     <ChessPiece piece={piece} />
                   </div>
                 ))}
               </div>
-              <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {blackPoints}</div>
+              <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {blackPoints()}</div>
             </div>
           </div>
         )}
