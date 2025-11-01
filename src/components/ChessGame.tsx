@@ -28,18 +28,6 @@ export const ChessGame = () => {
 
   const isViewingHistory = () => currentMoveIndex() < gameHistory().length - 1;
 
-  const getGameStatus = () => {
-    if (game().isCheckmate()) {
-      return game().turn() === "w" ? "Checkmate! Black wins!" : "Checkmate! White wins!";
-    }
-    if (game().isStalemate()) return "Stalemate! Draw!";
-    if (game().isThreefoldRepetition()) return "Draw by threefold repetition!";
-    if (game().isInsufficientMaterial()) return "Draw by insufficient material!";
-    if (game().isDraw()) return "Draw!";
-    if (game().isCheck()) return `Check! ${game().turn() === "w" ? "White" : "Black"} to move`;
-    return `${game().turn() === "w" ? "White" : "Black"} to move`;
-  };
-
   const getCapturedPieces = () => {
     const startingPieces = {
       p: 8,

@@ -6,11 +6,6 @@ type ChessPieceProps = {
   size?: number;
 };
 
-const classes: Record<Color, string> = {
-  w: "fill-white drop-shadow-black",
-  b: "fill-black drop-shadow-white",
-};
-
 export const ChessPiece: Component<ChessPieceProps> = ({ piece, size = 48 }) => {
   const { color, type } = piece;
   return (
@@ -18,4 +13,9 @@ export const ChessPiece: Component<ChessPieceProps> = ({ piece, size = 48 }) => 
       <use href={`./chess.svg#${type}`} />
     </svg>
   );
+};
+
+const classes: Record<Color, string> = {
+  w: "fill-zinc-300 drop-shadow-zinc-900",
+  b: "fill-zinc-900 drop-shadow-zinc-300",
 };
