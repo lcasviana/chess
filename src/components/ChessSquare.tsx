@@ -1,43 +1,60 @@
-import type { Piece, Square } from "chess.js";
-import { type Component, Match, Show, Switch } from "solid-js";
+import type { Square } from "chess.js";
+import type { Accessor, Component, JSX } from "solid-js";
+import { Show } from "solid-js";
 
+import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";
 
 export type ChessSquareColor = "light" | "dark";
 export type ChessSquareInCheck = "check" | "checkmate" | null;
 
-type ChessSquareProps = {
-  square: Square;
-  color: ChessSquareColor;
-  piece: Piece | null;
-  selected: boolean;
-  lastMove: boolean;
-  validMove: boolean;
-  inCheck: ChessSquareInCheck;
-  onClick: (square: Square) => void;
+export type ChessSquareProps = {
+  square: Accessor<Square>;
+  color: Accessor<ChessSquareColor>;
+  piece: Accessor<ChessPieceType | null>;
+  selected: Accessor<boolean>;
+  lastMove: Accessor<boolean>;
+  validMove: Accessor<boolean>;
+  inCheck: Accessor<ChessSquareInCheck>;
+  onClick: () => void;
 };
 
-export const ChessSquare: Component<ChessSquareProps> = (props) => {
-  const isCapture = () => props.validMove && props.piece;
+export const ChessSquare: Component<ChessSquareProps> = ({
+  square,
+  color,
+  piece,
+  selected,
+  lastMove,
+  validMove,
+  inCheck,
+  onClick,
+}: ChessSquareProps): JSX.Element => {
   return (
     <div
-      class="relative inline-flex aspect-square items-center justify-center select-none"
+      id={square()}
+      class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-95"
       classList={{
-        "bg-stone-500": props.color === "light",
-        "bg-stone-600": props.color === "dark",
-        "shadow-sm shadow-black z-10": props.selected,
-        "bg-red-900 animate-pulse": props.inCheck !== null,
+        "bg-red-900 animate-bounce": inCheck() !== null,
+        "bg-amber-200/25": !inCheck() && lastMove(),
+        "bg-stone-500": !inCheck() && !lastMove() && color() === "light",
+        "bg-stone-600": !inCheck() && !lastMove() && color() === "dark",
+        "cursor-pointer": validMove() || !!piece(),
       }}
-      onClick={() => props.onClick(props.square)}
+      aria-label={`Square ${square().toUpperCase()}`}
+      onClick={onClick}
     >
-      <Switch>
-        <Match when={props.piece}>{(piece) => <ChessPiece piece={piece()} />}</Match>
-        <Match when={props.validMove}>
-          <div class="absolute h-3 w-3 rounded-full bg-neutral-100 opacity-50" />
-        </Match>
-      </Switch>
-      <Show when={isCapture()}>
-        <div class="absolute inset-2 rounded-full border-4 border-neutral-100 opacity-50" />
+      <Show when={piece()}>
+        {(piece) => (
+          <div class="flex size-full items-center justify-center">
+            <ChessPiece piece={piece} selected={selected} />
+          </div>
+        )}
+      </Show>
+      <Show when={validMove() && !piece()}>
+        <div class="size-1/6 animate-pulse rounded-full bg-stone-50/50" />
+      </Show>
+      <Show when={validMove() && piece()}>
+        <div class="absolute inset-2 rounded-full border-4 border-stone-50/50 opacity-50" />
       </Show>
     </div>
   );

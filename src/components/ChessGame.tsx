@@ -2,6 +2,7 @@ import { Chess, type PieceSymbol, type Square } from "chess.js";
 import { createMemo, createSignal } from "solid-js";
 
 import { findBestMove } from "~/lib/chess-ai";
+import { type PieceRegistry, getCapturedPieces, handleCastling, handlePieceMove, initializePieceRegistry } from "~/lib/piece-registry";
 
 import { ChessBoard } from "./ChessBoard";
 import { ChessPiece } from "./ChessPiece";
@@ -14,7 +15,9 @@ interface GameHistoryEntry {
 }
 
 export const ChessGame = () => {
-  const [game, setGame] = createSignal(new Chess());
+  const initialGame = new Chess();
+  const [game, setGame] = createSignal(initialGame);
+  const [pieceRegistry, setPieceRegistry] = createSignal<PieceRegistry>(initializePieceRegistry(initialGame));
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [validMoves, setValidMoves] = createSignal<Square[]>([]);
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
@@ -28,54 +31,6 @@ export const ChessGame = () => {
 
   const isViewingHistory = () => currentMoveIndex() < gameHistory().length - 1;
 
-  const getCapturedPieces = () => {
-    const startingPieces = {
-      p: 8,
-      n: 2,
-      b: 2,
-      r: 2,
-      q: 1,
-      k: 1,
-    };
-
-    const currentPieces = { w: { ...startingPieces }, b: { ...startingPieces } };
-
-    // Count current pieces on board
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        const square = `${String.fromCharCode(97 + j)}${8 - i}` as Square;
-        const piece = game().get(square);
-        if (piece) {
-          currentPieces[piece.color][piece.type]--;
-        }
-      }
-    }
-
-    // Build captured pieces arrays with SVG data
-    const whiteCaptured: { type: PieceSymbol; color: "w" | "b" }[] = [];
-    const blackCaptured: { type: PieceSymbol; color: "w" | "b" }[] = [];
-
-    // White captured black pieces
-    Object.entries(currentPieces.b).forEach(([type, count]) => {
-      if (type !== "k") {
-        for (let i = 0; i < count; i++) {
-          whiteCaptured.push({ type: type as PieceSymbol, color: "b" });
-        }
-      }
-    });
-
-    // Black captured white pieces
-    Object.entries(currentPieces.w).forEach(([type, count]) => {
-      if (type !== "k") {
-        for (let i = 0; i < count; i++) {
-          blackCaptured.push({ type: type as PieceSymbol, color: "w" });
-        }
-      }
-    });
-
-    return { white: whiteCaptured, black: blackCaptured };
-  };
-
   const calculatePoints = (pieces: { type: PieceSymbol; color: "w" | "b" }[]) => {
     const pieceValues: { [key in PieceSymbol]: number } = {
       p: 1,
@@ -88,7 +43,13 @@ export const ChessGame = () => {
     return pieces.reduce((sum, piece) => sum + (pieceValues[piece.type] || 0), 0);
   };
 
-  const capturedPieces = createMemo(() => getCapturedPieces());
+  const capturedPieces = createMemo(() => {
+    const captured = getCapturedPieces(pieceRegistry());
+    return {
+      white: captured.white.map((p) => ({ type: p.type, color: p.color })),
+      black: captured.black.map((p) => ({ type: p.type, color: p.color })),
+    };
+  });
   const whitePoints = createMemo(() => calculatePoints(capturedPieces().white));
   const blackPoints = createMemo(() => calculatePoints(capturedPieces().black));
   const pointDifference = createMemo(() => whitePoints() - blackPoints());
@@ -109,42 +70,72 @@ export const ChessGame = () => {
 
     if (selectedSquare()) {
       if (validMoves().includes(square)) {
-        try {
-          const piece = game().get(selectedSquare()!);
-          if (!piece) return;
+        const from = selectedSquare()!;
+        const performMove = () => {
+          try {
+            const piece = game().get(from);
+            if (!piece) return;
 
-          const move = game().move({
-            from: selectedSquare()!,
-            to: square,
-            promotion: "q",
-          });
+            const move = game().move({
+              from,
+              to: square,
+              promotion: "q",
+            });
 
-          if (move) {
-            setTimeout(() => {
+            if (move) {
+              // Update piece registry
+              const registry = pieceRegistry();
+              handlePieceMove(registry, from, square, move.captured ? { type: move.captured, color: playerColor() === "w" ? "b" : "w" } : undefined);
+
+              // Handle special moves - detect castling by king moving more than 1 square
+              if (piece.type === "k" && Math.abs(from.charCodeAt(0) - square.charCodeAt(0)) > 1) {
+                // Castling
+                handleCastling(registry, { from, to: square });
+              }
+
+              setPieceRegistry({ ...registry });
+
               const newHistory = [
                 ...gameHistory(),
                 {
                   fen: game().fen(),
                   move: move.san,
                   capturedPiece: move.captured ? { type: move.captured, color: (playerColor() === "w" ? "b" : "w") as "w" | "b" } : undefined,
-                  lastMove: { from: selectedSquare()!, to: square },
+                  lastMove: { from, to: square },
                 },
               ];
 
               setGameHistory(newHistory);
               setCurrentMoveIndex(newHistory.length - 1);
-              setLastMove({ from: selectedSquare()!, to: square });
+              setLastMove({ from, to: square });
               setGame(new Chess(game().fen()));
 
               setTimeout(() => makeAiMove(), 500);
-            }, 300);
+            }
+          } catch (e) {
+            // Invalid move
           }
-        } catch (e) {
-          // Invalid move
+          setSelectedSquare(null);
+          setValidMoves([]);
+        };
+
+        // Use View Transitions API if available
+        if (document.startViewTransition) {
+          document.startViewTransition(() => performMove());
+        } else {
+          performMove();
         }
+      } else if (game().get(square)) {
+        setSelectedSquare(square);
+        setValidMoves(
+          game()
+            .moves({ square, verbose: true })
+            .map((m) => m.to as Square),
+        );
+      } else {
+        setSelectedSquare(null);
+        setValidMoves([]);
       }
-      setSelectedSquare(null);
-      setValidMoves([]);
     } else {
       const piece = game().get(square);
       if (piece && piece.color === game().turn()) {
@@ -159,27 +150,49 @@ export const ChessGame = () => {
     setIsAiThinking(true);
 
     setTimeout(() => {
-      const bestMove = findBestMove(game(), 3);
-      if (bestMove) {
-        const move = game().move(bestMove);
+      const bestMoveSan = findBestMove(game(), 3);
+      if (bestMoveSan) {
+        const move = game().move(bestMoveSan);
         if (move) {
-          setTimeout(() => {
+          const from = move.from as Square;
+          const to = move.to as Square;
+          const piece = game().get(to); // Get piece after move
+
+          const performAiMove = () => {
+            // Update piece registry
+            const registry = pieceRegistry();
+            handlePieceMove(registry, from, to, move.captured ? { type: move.captured, color: playerColor() === "w" ? "w" : "b" } : undefined);
+
+            // Handle special moves - detect castling by king moving more than 1 square
+            if (piece && piece.type === "k" && Math.abs(from.charCodeAt(0) - to.charCodeAt(0)) > 1) {
+              handleCastling(registry, { from, to });
+            }
+
+            setPieceRegistry({ ...registry });
+
             const newHistory = [
               ...gameHistory(),
               {
                 fen: game().fen(),
                 move: move.san,
                 capturedPiece: move.captured ? { type: move.captured, color: (playerColor() === "w" ? "w" : "b") as "w" | "b" } : undefined,
-                lastMove: { from: move.from as Square, to: move.to as Square },
+                lastMove: { from, to },
               },
             ];
 
             setGameHistory(newHistory);
             setCurrentMoveIndex(newHistory.length - 1);
-            setLastMove({ from: move.from as Square, to: move.to as Square });
+            setLastMove({ from, to });
             setGame(new Chess(game().fen()));
             setIsAiThinking(false);
-          }, 300);
+          };
+
+          // Use View Transitions API if available
+          if (document.startViewTransition) {
+            document.startViewTransition(() => performAiMove());
+          } else {
+            performAiMove();
+          }
         } else {
           setIsAiThinking(false);
         }
@@ -192,6 +205,7 @@ export const ChessGame = () => {
   const resetGame = () => {
     const newGame = new Chess();
     setGame(newGame);
+    setPieceRegistry(initializePieceRegistry(newGame));
     setSelectedSquare(null);
     setValidMoves([]);
     setLastMove(null);
@@ -231,13 +245,13 @@ export const ChessGame = () => {
       <div class="flex w-full items-start gap-6">
         {/* White captured pieces (left) */}
         {gameStarted() && (
-          <div class="max-w-[200px] flex-1">
+          <div class="fixed bottom-1/2 left-0 max-w-[200px] flex-1">
             <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
               <div class="mb-3 text-sm font-semibold text-white">White Captured</div>
               <div class="flex min-h-[60px] flex-wrap gap-2">
                 {capturedPieces().white.map((piece) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece piece={piece} />
+                    <ChessPiece id={() => ""} piece={() => piece} selected={() => false} />
                   </div>
                 ))}
               </div>
@@ -250,7 +264,7 @@ export const ChessGame = () => {
         <div class="flex flex-col items-center gap-4">
           {/* Color selection - shown before game() starts */}
           {!gameStarted() && (
-            <div class="mb-4 flex flex-col items-center gap-4">
+            <div class="fixed z-10 mb-4 flex flex-col items-center">
               <h2 class="text-2xl font-bold text-white">Choose Your Color</h2>
               <div class="flex gap-4">
                 <button onClick={() => setPlayerColor("w")} class="min-w-[140px]">
@@ -275,6 +289,7 @@ export const ChessGame = () => {
 
           <ChessBoard
             game={game()}
+            pieceRegistry={pieceRegistry()}
             flip={playerColor() === "b"}
             onSquareClick={handleSquareClick}
             selectedSquare={selectedSquare()}
@@ -284,14 +299,14 @@ export const ChessGame = () => {
 
           {/* Point difference */}
           {gameStarted() && pointDifference() !== 0 && (
-            <div class="animate-fade-in text-lg font-semibold">
+            <div class="animate-fade-in fixed top-1/12 text-lg font-semibold">
               {pointDifference() > 0 ? `White +${pointDifference()}` : `Black +${Math.abs(pointDifference())}`}
             </div>
           )}
 
           {/* Move list */}
           {gameStarted() && (
-            <div class="bg-card border-border max-h-[150px] w-full max-w-[600px] overflow-y-auto rounded-lg border p-4">
+            <div class="bg-card border-border fixed bottom-0 max-h-[150px] w-full max-w-[600px] overflow-y-auto rounded-lg border p-4">
               <div class="mb-2 text-sm font-semibold text-white">Move History</div>
               <div class="flex flex-wrap gap-x-4 gap-y-1">
                 {gameHistory()
@@ -307,7 +322,7 @@ export const ChessGame = () => {
 
           {/* Game controls */}
           {gameStarted() && (
-            <div class="flex items-center gap-3">
+            <div class="fixed top-0 flex items-center gap-3">
               <button onClick={goToPreviousMove} disabled={currentMoveIndex() === 0}>
                 {"<"}
               </button>
@@ -327,13 +342,13 @@ export const ChessGame = () => {
 
         {/* Black captured pieces (right) */}
         {gameStarted() && (
-          <div class="max-w-[200px] flex-1">
+          <div class="fixed right-0 bottom-1/2 max-w-[200px] flex-1">
             <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
               <div class="mb-3 text-sm font-semibold text-white">Black Captured</div>
               <div class="flex min-h-[60px] flex-wrap gap-2">
                 {capturedPieces().black.map((piece) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece piece={piece} />
+                    <ChessPiece id={() => ""} piece={() => piece} selected={() => false} />
                   </div>
                 ))}
               </div>

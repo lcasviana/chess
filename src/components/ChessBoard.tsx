@@ -1,10 +1,14 @@
 import type { Chess, Square } from "chess.js";
-import { createMemo, For, Index, type Component } from "solid-js";
+import { For, Index, type Component } from "solid-js";
+
+import type { PieceRegistry } from "~/lib/piece-registry";
+import { getPieceIdAtSquare } from "~/lib/piece-registry";
 
 import { ChessSquare } from "./ChessSquare";
 
 interface ChessBoardProps {
   game: Chess;
+  pieceRegistry: PieceRegistry;
   flip: boolean;
   onSquareClick: (square: Square) => void;
   selectedSquare: Square | null;
@@ -17,22 +21,6 @@ const Label = (props: { children: any }) => (
 );
 
 export const ChessBoard: Component<ChessBoardProps> = (props) => {
-  const files = () => (!props.flip ? ["A", "B", "C", "D", "E", "F", "G", "H"] : ["H", "G", "F", "E", "D", "C", "B", "A"]);
-  const ranks = () => (!props.flip ? [8, 7, 6, 5, 4, 3, 2, 1] : [1, 2, 3, 4, 5, 6, 7, 8]);
-
-  const board = createMemo(() => {
-    const board = Array.from({ length: 64 }, (_, i) => {
-      const row = Math.floor(i / 8);
-      const col = i % 8;
-      return `${String.fromCharCode(97 + col)}${8 - row}` as Square;
-    });
-
-    if (props.flip) {
-      board.reverse();
-    }
-    return board;
-  });
-
   return (
     <div
       class="grid bg-stone-800 shadow-sm shadow-neutral-950"
@@ -40,33 +28,36 @@ export const ChessBoard: Component<ChessBoardProps> = (props) => {
     >
       {/* Top file letters */}
       <div class="col-start-2 col-end-10 row-start-1 row-end-2 grid grid-cols-8">
-        <For each={files()}>{(file) => <Label>{file}</Label>}</For>
+        <For each={files}>{(file) => <Label>{file}</Label>}</For>
       </div>
 
       {/* Left rank numbers */}
       <div class="col-start-1 col-end-2 row-start-2 row-end-10 grid grid-rows-8">
-        <For each={ranks()}>{(rank) => <Label>{rank}</Label>}</For>
+        <For each={ranks}>{(rank) => <Label>{rank}</Label>}</For>
       </div>
 
       {/* Chess board */}
       <div class="relative col-start-2 col-end-10 row-start-2 row-end-10 grid grid-cols-8 gap-0 shadow-sm shadow-neutral-950">
-        <Index each={board()}>
-          {(square) => {
-            const sq = square();
-            const fileIndex = sq.charCodeAt(0) - 97;
-            const rankIndex = parseInt(sq.substring(1), 10) - 1;
-            const color = (fileIndex + rankIndex) % 2 !== 0 ? "light" : "dark";
-
+        <Index each={squares}>
+          {(square, index) => {
+            const fileIndex = index % 8;
+            const rankIndex = Math.floor(index / 8);
+            const color = (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
+            const pieceId = () => getPieceIdAtSquare(props.pieceRegistry, square());
+            const piece = () => {
+              const piece = props.game.get(square());
+              return piece ? { ...piece, id: pieceId()! } : null;
+            };
             return (
               <ChessSquare
-                square={sq}
-                piece={props.game.get(sq) ?? null}
-                color={color}
-                onClick={props.onSquareClick}
-                selected={props.selectedSquare === sq}
-                validMove={props.validMoves?.includes(sq)}
-                lastMove={!!props?.lastMove?.to}
-                inCheck={null}
+                square={square}
+                piece={piece}
+                color={() => color}
+                onClick={() => props.onSquareClick(square())}
+                selected={() => props.selectedSquare === square()}
+                validMove={() => props.validMoves?.includes(square())}
+                lastMove={() => props?.lastMove?.from === square() || props?.lastMove?.to === square()}
+                inCheck={() => null}
               />
             );
           }}
@@ -75,13 +66,17 @@ export const ChessBoard: Component<ChessBoardProps> = (props) => {
 
       {/* Right rank numbers */}
       <div class="col-start-10 col-end-11 row-start-2 row-end-10 grid grid-rows-8">
-        <For each={ranks()}>{(rank) => <Label>{rank}</Label>}</For>
+        <For each={ranks}>{(rank) => <Label>{rank}</Label>}</For>
       </div>
 
       {/* Bottom file letters */}
       <div class="col-start-2 col-end-10 row-start-10 row-end-11 grid grid-cols-8">
-        <For each={files()}>{(file) => <Label>{file}</Label>}</For>
+        <For each={files}>{(file) => <Label>{file}</Label>}</For>
       </div>
     </div>
   );
 };
+
+const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const ranks = [1, 2, 3, 4, 5, 6, 7, 8].reverse();
+const squares = ranks.flatMap((rank) => files.map((file) => `${file}${rank}` as Square));
