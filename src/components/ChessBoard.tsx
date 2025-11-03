@@ -1,72 +1,73 @@
-import type { Color, Piece, Square } from "chess.js";
+import type { Color, Square } from "chess.js";
 import { Index, type Accessor, type Component } from "solid-js";
 
-import type { PieceRegistry } from "~/lib/piece-registry";
-import { getPieceIdAtSquare } from "~/lib/piece-registry";
-
 import { ChessCoordinates, files, ranks } from "./ChessCoordinates";
-import { ChessSquare } from "./ChessSquare";
+import type { ChessPieceType } from "./ChessPiece";
+import type { ChessSquareInCheck } from "./ChessSquare";
+import { ChessSquare, squareColor } from "./ChessSquare";
 
 export type ChessBoardProps = {
-  boardState: Accessor<(square: Square) => Piece | null>;
   player: Accessor<Color>;
-  pieceRegistry: Accessor<PieceRegistry>;
-  selectedSquare: Accessor<Square | null>;
-  validMoves: Accessor<Square[]>;
-  lastMove: Accessor<{ from: Square; to: Square } | null>;
+  flip: Accessor<boolean>;
+  getSquarePiece: (square: Square) => ChessPieceType | null;
+  getSquareSelected: (square: Square) => boolean;
+  getSquareLastMove: (square: Square) => boolean;
+  getSquareValidMove: (square: Square) => boolean;
+  getSquareInCheck: (square: Square) => ChessSquareInCheck | null;
   onSquareClick: (square: Square) => void;
 };
 
-export const ChessBoard: Component<ChessBoardProps> = (props) => {
-  const flip = () => props.player() === "b";
+export const ChessBoard: Component<ChessBoardProps> = ({
+  player,
+  flip,
+  getSquarePiece,
+  getSquareSelected,
+  getSquareLastMove,
+  getSquareValidMove,
+  getSquareInCheck,
+  onSquareClick,
+}) => {
   return (
-    <div
-      class="grid bg-stone-800 shadow-sm shadow-neutral-950"
-      style="grid-template-columns: 24px repeat(8, calc(min(70vmin, 600px) / 8)) 24px; grid-template-rows: 24px repeat(8, calc(min(70vmin, 600px) / 8)) 24px; width: calc(min(70vmin, 600px) + 48px); height: calc(min(70vmin, 600px) + 48px);"
-      classList={{ "rotate-180": flip() }}
-    >
-      {/* Top File Letters */}
-      <ChessCoordinates type="files" flip={flip} colStart={2} colEnd={10} rowStart={1} rowEnd={2} />
+    <div class="grid size-full overflow-auto bg-stone-800 shadow-sm shadow-neutral-950">
+      <div
+        class="grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto"
+        style="grid-template: auto repeat(8, 1fr) auto / auto repeat(8, 1fr) auto"
+        classList={{ "rotate-180": flip() }}
+      >
+        {/* Top File Letters */}
+        <ChessCoordinates type="files" flip={flip} gridArea="1 / 2 / 2 / 10" />
 
-      {/* Left Rank Numbers */}
-      <ChessCoordinates type="ranks" flip={flip} colStart={1} colEnd={2} rowStart={2} rowEnd={10} />
+        {/* Left Rank Numbers */}
+        <ChessCoordinates type="ranks" flip={flip} gridArea="2 / 1 / 10 / 2" />
 
-      {/* Chess board */}
-      <div class="col-start-2 col-end-10 row-start-2 row-end-10 grid grid-cols-8 gap-0 shadow-sm shadow-neutral-950">
-        <Index each={squares}>
-          {(square, index) => {
-            const fileIndex = index % 8;
-            const rankIndex = Math.floor(index / 8);
-            const color = (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
-            const piece = () => {
-              const sq = square();
-              const piece = props.boardState()(sq);
-              const id = getPieceIdAtSquare(props.pieceRegistry(), sq);
-              return id && piece ? { ...piece, id } : null;
-            };
-            return (
-              <ChessSquare
-                square={square}
-                color={() => color}
-                player={props.player}
-                piece={piece}
-                onClick={() => props.onSquareClick(square())}
-                selected={() => props.selectedSquare() === square()}
-                flip={flip}
-                validMove={() => props.validMoves()?.includes(square())}
-                lastMove={() => props.lastMove()?.from === square() || props.lastMove()?.to === square()}
-                inCheck={() => null}
-              />
-            );
-          }}
-        </Index>
+        {/* Chess board */}
+        <div class="grid grid-cols-8 grid-rows-8" style={{ "grid-area": "2 / 2 / 10 / 10" }}>
+          <Index each={squares}>
+            {(square, index) => {
+              return (
+                <ChessSquare
+                  square={square()}
+                  color={squareColor(index)}
+                  player={player}
+                  flip={flip}
+                  piece={() => getSquarePiece(square())}
+                  selected={() => getSquareSelected(square())}
+                  lastMove={() => getSquareLastMove(square())}
+                  validMove={() => getSquareValidMove(square())}
+                  inCheck={() => getSquareInCheck(square())}
+                  onClick={() => onSquareClick(square())}
+                />
+              );
+            }}
+          </Index>
+        </div>
+
+        {/* Right Rank Numbers */}
+        <ChessCoordinates type="ranks" flip={flip} gridArea="2 / 10 / 10 / 11" />
+
+        {/* Bottom File Letters */}
+        <ChessCoordinates type="files" flip={flip} gridArea="10 / 2 / 11 / 10" />
       </div>
-
-      {/* Right Rank Numbers */}
-      <ChessCoordinates type="ranks" flip={flip} colStart={10} colEnd={11} rowStart={2} rowEnd={10} />
-
-      {/* Bottom File Letters */}
-      <ChessCoordinates type="files" flip={flip} colStart={2} colEnd={10} rowStart={10} rowEnd={11} />
     </div>
   );
 };

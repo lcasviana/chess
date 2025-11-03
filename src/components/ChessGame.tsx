@@ -2,10 +2,18 @@ import { Chess, type PieceSymbol, type Square } from "chess.js";
 import { createMemo, createSignal } from "solid-js";
 
 import { findBestMove } from "~/lib/chess-ai";
-import { type PieceRegistry, getCapturedPieces, handleCastling, handlePieceMove, initializePieceRegistry } from "~/lib/piece-registry";
+import {
+  type PieceRegistry,
+  getCapturedPieces,
+  getPieceIdAtSquare,
+  handleCastling,
+  handlePieceMove,
+  initializePieceRegistry,
+} from "~/lib/piece-registry";
 
 import { ChessBoard } from "./ChessBoard";
 import { ChessPiece } from "./ChessPiece";
+import type { ChessSquareInCheck } from "./ChessSquare";
 
 interface GameHistoryEntry {
   fen: string;
@@ -30,6 +38,39 @@ export const ChessGame = () => {
   const [playerColor, setPlayerColor] = createSignal<"w" | "b">("w");
 
   const isViewingHistory = () => currentMoveIndex() < gameHistory().length - 1;
+
+  // Detect if king is in check or checkmate
+  const inCheck = createMemo((): { square: Square; type: ChessSquareInCheck } | null => {
+    const currentGame = game();
+    if (currentGame.isCheckmate()) {
+      // Find the king's position
+      const board = currentGame.board();
+      const turn = currentGame.turn();
+      for (let rank = 0; rank < 8; rank++) {
+        for (let file = 0; file < 8; file++) {
+          const piece = board[rank][file];
+          if (piece && piece.type === "k" && piece.color === turn) {
+            const square = `${"abcdefgh"[file]}${8 - rank}` as Square;
+            return { square, type: "checkmate" };
+          }
+        }
+      }
+    } else if (currentGame.isCheck()) {
+      // Find the king's position
+      const board = currentGame.board();
+      const turn = currentGame.turn();
+      for (let rank = 0; rank < 8; rank++) {
+        for (let file = 0; file < 8; file++) {
+          const piece = board[rank][file];
+          if (piece && piece.type === "k" && piece.color === turn) {
+            const square = `${"abcdefgh"[file]}${8 - rank}` as Square;
+            return { square, type: "check" };
+          }
+        }
+      }
+    }
+    return null;
+  });
 
   const calculatePoints = (pieces: { type: PieceSymbol; color: "w" | "b" }[]) => {
     const pieceValues: { [key in PieceSymbol]: number } = {
@@ -241,123 +282,142 @@ export const ChessGame = () => {
     }
   };
 
+  const piece = (sq: Square) => {
+    const piece = game().get(sq);
+    const id = getPieceIdAtSquare(pieceRegistry(), sq);
+    return id && piece ? { ...piece, id } : null;
+  };
+
+  const getSquareSelected = (sq: Square) => selectedSquare() === sq;
+
+  const getSquareLastMove = (sq: Square) => {
+    const move = lastMove();
+    return move ? move.from === sq || move.to === sq : false;
+  };
+
+  const getSquareValidMove = (sq: Square) => validMoves().includes(sq);
+
+  const getSquareInCheck = (sq: Square): ChessSquareInCheck | null => {
+    const check = inCheck();
+    return check && check.square === sq ? check.type : null;
+  };
+
   return (
-    <div class="flex h-full items-center justify-center">
-      <div class="flex w-full items-start gap-6">
-        {/* White captured pieces (left) */}
+    <div class="grid size-full items-start gap-6 overflow-auto">
+      {/* White captured pieces (left) */}
+      {gameStarted() && (
+        <div class="fixed bottom-1/2 left-0 max-w-[200px] flex-1">
+          <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
+            <div class="mb-3 text-sm font-semibold text-white">White Captured</div>
+            <div class="flex min-h-[60px] flex-wrap gap-2">
+              {capturedPieces().white.map((piece) => (
+                <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
+                  <ChessPiece piece={() => piece} />
+                </div>
+              ))}
+            </div>
+            <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {whitePoints()}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Center: Board and controls */}
+      <div class="grid size-full overflow-auto">
+        {/* Color selection - shown before game() starts */}
+        {!gameStarted() && (
+          <div class="fixed z-10 mb-4 flex flex-col items-center">
+            <h2 class="text-2xl font-bold text-white">Choose Your Color</h2>
+            <div class="flex gap-4">
+              <button onClick={() => setPlayerColor("w")} class="min-w-[140px]">
+                Play as White
+              </button>
+              <button onClick={() => setPlayerColor("b")} class="min-w-[140px]">
+                Play as Black
+              </button>
+            </div>
+            <button onClick={startGame} class="mt-2 min-w-[200px]">
+              Start Game
+            </button>
+          </div>
+        )}
+
+        {/* Status */}
+        {gameStarted() && isViewingHistory() && (
+          <div class="rounded-lg border border-yellow-500/50 bg-yellow-500/20 px-4 py-2 text-sm font-semibold">
+            Viewing history - Move {currentMoveIndex()} of {gameHistory().length - 1}
+          </div>
+        )}
+
+        <ChessBoard
+          getSquarePiece={(sq) => piece(sq)}
+          player={playerColor}
+          flip={() => playerColor() === "b"}
+          onSquareClick={handleSquareClick}
+          getSquareSelected={getSquareSelected}
+          getSquareLastMove={getSquareLastMove}
+          getSquareValidMove={getSquareValidMove}
+          getSquareInCheck={getSquareInCheck}
+        />
+
+        {/* Point difference */}
+        {gameStarted() && pointDifference() !== 0 && (
+          <div class="animate-fade-in fixed top-1/12 text-lg font-semibold">
+            {pointDifference() > 0 ? `White +${pointDifference()}` : `Black +${Math.abs(pointDifference())}`}
+          </div>
+        )}
+
+        {/* Move list */}
         {gameStarted() && (
-          <div class="fixed bottom-1/2 left-0 max-w-[200px] flex-1">
-            <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
-              <div class="mb-3 text-sm font-semibold text-white">White Captured</div>
-              <div class="flex min-h-[60px] flex-wrap gap-2">
-                {capturedPieces().white.map((piece) => (
-                  <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece piece={() => piece} />
-                  </div>
+          <div class="bg-card border-border fixed bottom-0 max-h-[150px] w-full max-w-[600px] overflow-y-auto rounded-lg border p-4">
+            <div class="mb-2 text-sm font-semibold text-white">Move History</div>
+            <div class="flex flex-wrap gap-x-4 gap-y-1">
+              {gameHistory()
+                .slice(1)
+                .map((entry, idx) => (
+                  <span class={`font-mono text-sm ${idx === currentMoveIndex() - 1 ? "font-bold text-neutral-100" : "text-muted-neutral-800"}`}>
+                    {Math.floor(idx / 2) + 1}.{idx % 2 === 0 ? "" : ".."} {entry.move}
+                  </span>
                 ))}
-              </div>
-              <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {whitePoints()}</div>
             </div>
           </div>
         )}
 
-        {/* Center: Board and controls */}
-        <div class="flex flex-col items-center gap-4">
-          {/* Color selection - shown before game() starts */}
-          {!gameStarted() && (
-            <div class="fixed z-10 mb-4 flex flex-col items-center">
-              <h2 class="text-2xl font-bold text-white">Choose Your Color</h2>
-              <div class="flex gap-4">
-                <button onClick={() => setPlayerColor("w")} class="min-w-[140px]">
-                  Play as White
-                </button>
-                <button onClick={() => setPlayerColor("b")} class="min-w-[140px]">
-                  Play as Black
-                </button>
-              </div>
-              <button onClick={startGame} class="mt-2 min-w-[200px]">
-                Start Game
-              </button>
-            </div>
-          )}
-
-          {/* Status */}
-          {gameStarted() && isViewingHistory() && (
-            <div class="rounded-lg border border-yellow-500/50 bg-yellow-500/20 px-4 py-2 text-sm font-semibold">
-              Viewing history - Move {currentMoveIndex()} of {gameHistory().length - 1}
-            </div>
-          )}
-
-          <ChessBoard
-            boardState={() => (sq) => game().get(sq) ?? null}
-            player={playerColor}
-            pieceRegistry={pieceRegistry}
-            onSquareClick={handleSquareClick}
-            selectedSquare={selectedSquare}
-            validMoves={validMoves}
-            lastMove={lastMove}
-          />
-
-          {/* Point difference */}
-          {gameStarted() && pointDifference() !== 0 && (
-            <div class="animate-fade-in fixed top-1/12 text-lg font-semibold">
-              {pointDifference() > 0 ? `White +${pointDifference()}` : `Black +${Math.abs(pointDifference())}`}
-            </div>
-          )}
-
-          {/* Move list */}
-          {gameStarted() && (
-            <div class="bg-card border-border fixed bottom-0 max-h-[150px] w-full max-w-[600px] overflow-y-auto rounded-lg border p-4">
-              <div class="mb-2 text-sm font-semibold text-white">Move History</div>
-              <div class="flex flex-wrap gap-x-4 gap-y-1">
-                {gameHistory()
-                  .slice(1)
-                  .map((entry, idx) => (
-                    <span class={`font-mono text-sm ${idx === currentMoveIndex() - 1 ? "font-bold text-neutral-100" : "text-muted-neutral-800"}`}>
-                      {Math.floor(idx / 2) + 1}.{idx % 2 === 0 ? "" : ".."} {entry.move}
-                    </span>
-                  ))}
-              </div>
-            </div>
-          )}
-
-          {/* Game controls */}
-          {gameStarted() && (
-            <div class="fixed top-0 flex items-center gap-3">
-              <button onClick={goToPreviousMove} disabled={currentMoveIndex() === 0}>
-                {"<"}
-              </button>
-
-              <button onClick={resetGame} class="gap-2">
-                Reset Game
-              </button>
-
-              <button onClick={goToNextMove} disabled={currentMoveIndex() === gameHistory().length - 1}>
-                {">"}
-              </button>
-
-              {isAiThinking() && <span class="ml-2 animate-pulse text-sm">AI is thinking...</span>}
-            </div>
-          )}
-        </div>
-
-        {/* Black captured pieces (right) */}
+        {/* Game controls */}
         {gameStarted() && (
-          <div class="fixed right-0 bottom-1/2 max-w-[200px] flex-1">
-            <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
-              <div class="mb-3 text-sm font-semibold text-white">Black Captured</div>
-              <div class="flex min-h-[60px] flex-wrap gap-2">
-                {capturedPieces().black.map((piece) => (
-                  <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece piece={() => piece} />
-                  </div>
-                ))}
-              </div>
-              <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {blackPoints()}</div>
-            </div>
+          <div class="fixed top-0 flex items-center gap-3">
+            <button onClick={goToPreviousMove} disabled={currentMoveIndex() === 0}>
+              {"<"}
+            </button>
+
+            <button onClick={resetGame} class="gap-2">
+              Reset Game
+            </button>
+
+            <button onClick={goToNextMove} disabled={currentMoveIndex() === gameHistory().length - 1}>
+              {">"}
+            </button>
+
+            {isAiThinking() && <span class="ml-2 animate-pulse text-sm">AI is thinking...</span>}
           </div>
         )}
       </div>
+
+      {/* Black captured pieces (right) */}
+      {gameStarted() && (
+        <div class="fixed right-0 bottom-1/2 max-w-[200px] flex-1">
+          <div class="bg-card/50 border-border sticky top-4 rounded-lg border p-4 backdrop-blur">
+            <div class="mb-3 text-sm font-semibold text-white">Black Captured</div>
+            <div class="flex min-h-[60px] flex-wrap gap-2">
+              {capturedPieces().black.map((piece) => (
+                <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
+                  <ChessPiece piece={() => piece} />
+                </div>
+              ))}
+            </div>
+            <div class="text-muted-neutral-800 mt-2 text-xs font-semibold">Points: {blackPoints()}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

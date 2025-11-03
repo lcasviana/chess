@@ -5,31 +5,26 @@ export type ChessCoordinatesType = "files" | "ranks";
 
 export type ChessCoordinatesProps = {
   type: ChessCoordinatesType;
-  rowStart: number;
-  rowEnd: number;
-  colStart: number;
-  colEnd: number;
+  gridArea: string;
   flip: Accessor<boolean>;
 };
 
-export const ChessCoordinates: Component<ChessCoordinatesProps> = ({ type, rowStart, rowEnd, colStart, colEnd, flip }) => {
+export const ChessCoordinates: Component<ChessCoordinatesProps> = ({ type, gridArea, flip }) => {
   return (
     <div
       class="grid"
       classList={{
         "grid-rows-1 grid-cols-8": type === "files",
         "grid-rows-8 grid-cols-1": type === "ranks",
-        "rotate-180": flip(),
       }}
-      style={{
-        "grid-row-start": rowStart,
-        "grid-row-end": rowEnd,
-        "grid-column-start": colStart,
-        "grid-column-end": colEnd,
-      }}
+      style={{ "grid-area": gridArea }}
     >
       <For each={coordinates[type]}>
-        {(label) => <div class="flex size-full items-center justify-center text-sm font-semibold text-stone-50/50">{label}</div>}
+        {(label) => (
+          <div class="m-auto flex size-5 items-center justify-center text-sm font-semibold text-stone-50/50" classList={{ "rotate-180": flip() }}>
+            {label}
+          </div>
+        )}
       </For>
     </div>
   );
