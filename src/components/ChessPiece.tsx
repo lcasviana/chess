@@ -2,17 +2,18 @@ import type { Color, PieceSymbol } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 
 export type ChessPieceType = {
-  id: string;
+  id?: string;
   color: Color;
   type: PieceSymbol;
 };
 
 export type ChessPieceProps = {
   piece: Accessor<ChessPieceType>;
-  selected: Accessor<boolean>;
+  selected?: Accessor<boolean>;
+  flip?: Accessor<boolean>;
 };
 
-export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected }: ChessPieceProps): JSX.Element => {
+export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected, flip }: ChessPieceProps): JSX.Element => {
   const { id, color, type } = piece();
   return (
     <svg
@@ -22,7 +23,8 @@ export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected }: Ches
       classList={{
         "fill-zinc-300 drop-shadow-zinc-900": color === "w",
         "fill-zinc-900 drop-shadow-zinc-300": color === "b",
-        "scale-125": selected(),
+        "scale-125": selected?.(),
+        "rotate-180": flip?.(),
       }}
       aria-label={`${colorNames[color]} ${pieceNames[type]}`}
       role="img"

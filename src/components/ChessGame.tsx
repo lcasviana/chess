@@ -68,6 +68,8 @@ export const ChessGame = () => {
     const expectedColor = playerColor();
     if (game().turn() !== expectedColor) return;
 
+    const piece = game().get(square);
+
     if (selectedSquare()) {
       if (validMoves().includes(square)) {
         const from = selectedSquare()!;
@@ -125,7 +127,7 @@ export const ChessGame = () => {
         } else {
           performMove();
         }
-      } else if (game().get(square)) {
+      } else if (piece && piece.color === game().turn()) {
         setSelectedSquare(square);
         setValidMoves(
           game()
@@ -137,7 +139,6 @@ export const ChessGame = () => {
         setValidMoves([]);
       }
     } else {
-      const piece = game().get(square);
       if (piece && piece.color === game().turn()) {
         setSelectedSquare(square);
         const moves = game().moves({ square, verbose: true });
@@ -251,7 +252,7 @@ export const ChessGame = () => {
               <div class="flex min-h-[60px] flex-wrap gap-2">
                 {capturedPieces().white.map((piece) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece id={() => ""} piece={() => piece} selected={() => false} />
+                    <ChessPiece piece={() => piece} />
                   </div>
                 ))}
               </div>
@@ -288,13 +289,13 @@ export const ChessGame = () => {
           )}
 
           <ChessBoard
-            game={game()}
-            pieceRegistry={pieceRegistry()}
-            flip={playerColor() === "b"}
+            boardState={() => (sq) => game().get(sq) ?? null}
+            player={playerColor}
+            pieceRegistry={pieceRegistry}
             onSquareClick={handleSquareClick}
-            selectedSquare={selectedSquare()}
-            validMoves={validMoves()}
-            lastMove={lastMove()}
+            selectedSquare={selectedSquare}
+            validMoves={validMoves}
+            lastMove={lastMove}
           />
 
           {/* Point difference */}
@@ -348,7 +349,7 @@ export const ChessGame = () => {
               <div class="flex min-h-[60px] flex-wrap gap-2">
                 {capturedPieces().black.map((piece) => (
                   <div class="animate-scale-in" style={{ width: "calc(min(70vmin, 600px) / 32)", height: "calc(min(70vmin, 600px) / 32)" }}>
-                    <ChessPiece id={() => ""} piece={() => piece} selected={() => false} />
+                    <ChessPiece piece={() => piece} />
                   </div>
                 ))}
               </div>

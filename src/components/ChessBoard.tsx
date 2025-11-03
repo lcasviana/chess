@@ -1,62 +1,60 @@
-import type { Chess, Square } from "chess.js";
-import { For, Index, type Component } from "solid-js";
+import type { Color, Piece, Square } from "chess.js";
+import { Index, type Accessor, type Component } from "solid-js";
 
 import type { PieceRegistry } from "~/lib/piece-registry";
 import { getPieceIdAtSquare } from "~/lib/piece-registry";
 
+import { ChessCoordinates, files, ranks } from "./ChessCoordinates";
 import { ChessSquare } from "./ChessSquare";
 
-interface ChessBoardProps {
-  game: Chess;
-  pieceRegistry: PieceRegistry;
-  flip: boolean;
+export type ChessBoardProps = {
+  boardState: Accessor<(square: Square) => Piece | null>;
+  player: Accessor<Color>;
+  pieceRegistry: Accessor<PieceRegistry>;
+  selectedSquare: Accessor<Square | null>;
+  validMoves: Accessor<Square[]>;
+  lastMove: Accessor<{ from: Square; to: Square } | null>;
   onSquareClick: (square: Square) => void;
-  selectedSquare: Square | null;
-  validMoves: Square[];
-  lastMove: { from: Square; to: Square } | null;
-}
-
-const Label = (props: { children: any }) => (
-  <div class="flex items-center justify-center text-sm font-semibold text-stone-50/50">{props.children}</div>
-);
+};
 
 export const ChessBoard: Component<ChessBoardProps> = (props) => {
+  const flip = () => props.player() === "b";
   return (
     <div
       class="grid bg-stone-800 shadow-sm shadow-neutral-950"
       style="grid-template-columns: 24px repeat(8, calc(min(70vmin, 600px) / 8)) 24px; grid-template-rows: 24px repeat(8, calc(min(70vmin, 600px) / 8)) 24px; width: calc(min(70vmin, 600px) + 48px); height: calc(min(70vmin, 600px) + 48px);"
+      classList={{ "rotate-180": flip() }}
     >
-      {/* Top file letters */}
-      <div class="col-start-2 col-end-10 row-start-1 row-end-2 grid grid-cols-8">
-        <For each={files}>{(file) => <Label>{file}</Label>}</For>
-      </div>
+      {/* Top File Letters */}
+      <ChessCoordinates type="files" flip={flip} colStart={2} colEnd={10} rowStart={1} rowEnd={2} />
 
-      {/* Left rank numbers */}
-      <div class="col-start-1 col-end-2 row-start-2 row-end-10 grid grid-rows-8">
-        <For each={ranks}>{(rank) => <Label>{rank}</Label>}</For>
-      </div>
+      {/* Left Rank Numbers */}
+      <ChessCoordinates type="ranks" flip={flip} colStart={1} colEnd={2} rowStart={2} rowEnd={10} />
 
       {/* Chess board */}
-      <div class="relative col-start-2 col-end-10 row-start-2 row-end-10 grid grid-cols-8 gap-0 shadow-sm shadow-neutral-950">
+      <div class="col-start-2 col-end-10 row-start-2 row-end-10 grid grid-cols-8 gap-0 shadow-sm shadow-neutral-950">
         <Index each={squares}>
           {(square, index) => {
             const fileIndex = index % 8;
             const rankIndex = Math.floor(index / 8);
             const color = (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
-            const pieceId = () => getPieceIdAtSquare(props.pieceRegistry, square());
             const piece = () => {
-              const piece = props.game.get(square());
-              return piece ? { ...piece, id: pieceId()! } : null;
+              const sq = square();
+              const piece = props.boardState()(sq);
+              const id = getPieceIdAtSquare(props.pieceRegistry(), sq);
+              return id && piece ? { ...piece, id } : null;
             };
             return (
               <ChessSquare
                 square={square}
-                piece={piece}
                 color={() => color}
+                player={props.player}
+                piece={piece}
                 onClick={() => props.onSquareClick(square())}
-                selected={() => props.selectedSquare === square()}
-                validMove={() => props.validMoves?.includes(square())}
-                lastMove={() => props?.lastMove?.from === square() || props?.lastMove?.to === square()}
+                selected={() => props.selectedSquare() === square()}
+                flip={flip}
+                validMove={() => props.validMoves()?.includes(square())}
+                lastMove={() => props.lastMove()?.from === square() || props.lastMove()?.to === square()}
                 inCheck={() => null}
               />
             );
@@ -64,19 +62,13 @@ export const ChessBoard: Component<ChessBoardProps> = (props) => {
         </Index>
       </div>
 
-      {/* Right rank numbers */}
-      <div class="col-start-10 col-end-11 row-start-2 row-end-10 grid grid-rows-8">
-        <For each={ranks}>{(rank) => <Label>{rank}</Label>}</For>
-      </div>
+      {/* Right Rank Numbers */}
+      <ChessCoordinates type="ranks" flip={flip} colStart={10} colEnd={11} rowStart={2} rowEnd={10} />
 
-      {/* Bottom file letters */}
-      <div class="col-start-2 col-end-10 row-start-10 row-end-11 grid grid-cols-8">
-        <For each={files}>{(file) => <Label>{file}</Label>}</For>
-      </div>
+      {/* Bottom File Letters */}
+      <ChessCoordinates type="files" flip={flip} colStart={2} colEnd={10} rowStart={10} rowEnd={11} />
     </div>
   );
 };
 
-const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const ranks = [1, 2, 3, 4, 5, 6, 7, 8].reverse();
-const squares = ranks.flatMap((rank) => files.map((file) => `${file}${rank}` as Square));
+export const squares = ranks.flatMap((rank) => files.map((file) => `${file}${rank}` as Square));

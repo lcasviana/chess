@@ -1,4 +1,4 @@
-import type { Square } from "chess.js";
+import type { Color, Square } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { Show } from "solid-js";
 
@@ -11,8 +11,10 @@ export type ChessSquareInCheck = "check" | "checkmate" | null;
 export type ChessSquareProps = {
   square: Accessor<Square>;
   color: Accessor<ChessSquareColor>;
+  player: Accessor<Color>;
   piece: Accessor<ChessPieceType | null>;
   selected: Accessor<boolean>;
+  flip: Accessor<boolean>;
   lastMove: Accessor<boolean>;
   validMove: Accessor<boolean>;
   inCheck: Accessor<ChessSquareInCheck>;
@@ -22,8 +24,10 @@ export type ChessSquareProps = {
 export const ChessSquare: Component<ChessSquareProps> = ({
   square,
   color,
+  player,
   piece,
   selected,
+  flip,
   lastMove,
   validMove,
   inCheck,
@@ -32,13 +36,13 @@ export const ChessSquare: Component<ChessSquareProps> = ({
   return (
     <div
       id={square()}
-      class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-95"
+      class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85"
       classList={{
         "bg-red-900 animate-bounce": inCheck() !== null,
         "bg-amber-200/25": !inCheck() && lastMove(),
         "bg-stone-500": !inCheck() && !lastMove() && color() === "light",
         "bg-stone-600": !inCheck() && !lastMove() && color() === "dark",
-        "cursor-pointer": validMove() || !!piece(),
+        "cursor-pointer": validMove() || piece()?.color === player(),
       }}
       aria-label={`Square ${square().toUpperCase()}`}
       onClick={onClick}
@@ -46,7 +50,7 @@ export const ChessSquare: Component<ChessSquareProps> = ({
       <Show when={piece()}>
         {(piece) => (
           <div class="flex size-full items-center justify-center">
-            <ChessPiece piece={piece} selected={selected} />
+            <ChessPiece piece={piece} selected={selected} flip={flip} />
           </div>
         )}
       </Show>
