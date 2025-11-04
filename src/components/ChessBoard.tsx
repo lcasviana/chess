@@ -1,9 +1,10 @@
 import type { Color, Square } from "chess.js";
-import { Index, type Accessor, type Component } from "solid-js";
+import type { Accessor, Component, JSX } from "solid-js";
+import { For } from "solid-js";
 
 import { ChessCoordinates, files, ranks } from "./ChessCoordinates";
 import type { ChessPieceType } from "./ChessPiece";
-import type { ChessSquareInCheck } from "./ChessSquare";
+import type { ChessSquareInCheck, ChessSquareProps } from "./ChessSquare";
 import { ChessSquare, squareColor } from "./ChessSquare";
 
 export type ChessBoardProps = {
@@ -26,12 +27,12 @@ export const ChessBoard: Component<ChessBoardProps> = ({
   getSquareValidMove,
   getSquareInCheck,
   onSquareClick,
-}) => {
+}: ChessBoardProps): JSX.Element => {
   return (
-    <div class="grid size-full overflow-auto bg-stone-800 shadow-sm shadow-neutral-950">
+    <div class="grid aspect-square size-full overflow-auto bg-stone-800 shadow-sm shadow-neutral-950">
       <div
-        class="grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto"
         style="grid-template: auto repeat(8, 1fr) auto / auto repeat(8, 1fr) auto"
+        class="grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto"
         classList={{ "rotate-180": flip() }}
       >
         {/* Top File Letters */}
@@ -41,25 +42,31 @@ export const ChessBoard: Component<ChessBoardProps> = ({
         <ChessCoordinates type="ranks" flip={flip} gridArea="2 / 1 / 10 / 2" />
 
         {/* Chess board */}
-        <div class="grid grid-cols-8 grid-rows-8" style={{ "grid-area": "2 / 2 / 10 / 10" }}>
-          <Index each={squares}>
-            {(square, index) => {
+        <div role="grid" aria-label="Chess Board" class="grid grid-cols-8 grid-rows-8" style={{ "grid-area": "2 / 2 / 10 / 10" }}>
+          <For each={squares}>
+            {(square: Square, index: Accessor<number>): JSX.Element => {
+              const piece: ChessSquareProps["piece"] = (): ChessPieceType | null => getSquarePiece(square);
+              const selected: ChessSquareProps["selected"] = (): boolean => getSquareSelected(square);
+              const lastMove: ChessSquareProps["lastMove"] = (): boolean => getSquareLastMove(square);
+              const validMove: ChessSquareProps["validMove"] = (): boolean => getSquareValidMove(square);
+              const inCheck: ChessSquareProps["inCheck"] = (): ChessSquareInCheck | null => getSquareInCheck(square);
+              const onClick: ChessSquareProps["onClick"] = (): void => onSquareClick(square);
               return (
                 <ChessSquare
-                  square={square()}
-                  color={squareColor(index)}
+                  square={square}
+                  color={squareColor(index())}
                   player={player}
                   flip={flip}
-                  piece={() => getSquarePiece(square())}
-                  selected={() => getSquareSelected(square())}
-                  lastMove={() => getSquareLastMove(square())}
-                  validMove={() => getSquareValidMove(square())}
-                  inCheck={() => getSquareInCheck(square())}
-                  onClick={() => onSquareClick(square())}
+                  piece={piece}
+                  selected={selected}
+                  lastMove={lastMove}
+                  validMove={validMove}
+                  inCheck={inCheck}
+                  onClick={onClick}
                 />
               );
             }}
-          </Index>
+          </For>
         </div>
 
         {/* Right Rank Numbers */}
@@ -72,4 +79,6 @@ export const ChessBoard: Component<ChessBoardProps> = ({
   );
 };
 
-export const squares = ranks.flatMap((rank) => files.map((file) => `${file}${rank}` as Square));
+export const squares: Readonly<Square[]> = Object.freeze(
+  ranks.flatMap((rank: number): Square[] => files.map((file: string): Square => `${file}${rank}` as Square)),
+);

@@ -19,7 +19,7 @@ export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected, flip }
     <svg
       id={id}
       style={{ "view-transition-name": id }}
-      class="size-3/4 drop-shadow-xs transition-all duration-200"
+      class="size-full drop-shadow-xs transition-all duration-200"
       classList={{
         "fill-zinc-300 drop-shadow-zinc-900": color === "w",
         "fill-zinc-900 drop-shadow-zinc-300": color === "b",

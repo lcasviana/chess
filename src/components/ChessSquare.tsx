@@ -36,6 +36,7 @@ export const ChessSquare: Component<ChessSquareProps> = ({
   return (
     <div
       id={square}
+      style={{ padding: "15%" }}
       class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85"
       classList={{
         "bg-red-200/25 animate-pulse": inCheck() !== null,
@@ -48,25 +49,25 @@ export const ChessSquare: Component<ChessSquareProps> = ({
       onClick={onClick}
     >
       <Show when={piece()}>
-        {(piece) => (
+        {(piece: Accessor<ChessPieceType>): JSX.Element => (
           <div class="flex size-full items-center justify-center">
             <ChessPiece piece={piece} selected={selected} flip={flip} />
           </div>
         )}
       </Show>
       <Show when={validMove() && !piece()}>
-        <div class="size-1/6 animate-pulse rounded-full bg-stone-50/50" />
+        <div class="size-1/5 animate-pulse rounded-full bg-stone-50/50" />
       </Show>
       <Show when={validMove() && piece()}>
-        <div class="absolute inset-2 rounded-full border-4 border-stone-50/50 opacity-50" />
+        <div style={{ inset: "5%" }} class="absolute rounded-full border-4 border-stone-50/50 opacity-50" />
       </Show>
     </div>
   );
 };
 
 export function squareColor(index: number): ChessSquareColor {
-  const fileIndex = index % 8;
-  const rankIndex = Math.floor(index / 8);
-  const color = (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
+  const fileIndex: number = index % 8;
+  const rankIndex: number = Math.floor(index / 8);
+  const color: ChessSquareColor = (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
   return color;
 }

@@ -1,10 +1,10 @@
-import type { Component } from "solid-js";
+import type { Component, JSX } from "solid-js";
 
 import { ChessGame } from "./components/ChessGame";
 
 import "./app.css";
 
-const App: Component = () => {
+const App: Component = (): JSX.Element => {
   return (
     <main class="grid size-full grid-rows-[auto_1fr_auto] justify-center gap-4 overflow-auto p-4">
       <h1 class="flex basis-full justify-center gap-6 text-5xl font-black">Chess</h1>

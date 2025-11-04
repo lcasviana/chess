@@ -489,25 +489,20 @@ export const getPieceById = (registry: PieceRegistry, id: string): PieceIdentity
 };
 
 /**
- * Retrieves all captured pieces, grouped by which player captured them.
+ * Retrieves all captured pieces.
  *
  * @param registry - The piece registry to query
- * @returns Object with 'white' array (pieces captured by white) and 'black' array (pieces captured by black)
+ * @returns Array of all captured piece identities
  */
-export const getCapturedPieces = (registry: PieceRegistry): { white: PieceIdentity[]; black: PieceIdentity[] } => {
-  const white: PieceIdentity[] = [];
-  const black: PieceIdentity[] = [];
+export const getCapturedPieces = (registry: PieceRegistry): PieceIdentity[] => {
+  const captured: PieceIdentity[] = [];
 
   for (const pieceId of registry.captured) {
     const piece = registry.byId.get(pieceId);
     if (piece) {
-      if (piece.color === "w") {
-        black.push(piece); // Black captured white pieces
-      } else {
-        white.push(piece); // White captured black pieces
-      }
+      captured.push(piece);
     }
   }
 
-  return { white, black };
+  return captured;
 };
