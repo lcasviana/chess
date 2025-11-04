@@ -38,7 +38,7 @@ export const ChessSquare: Component<ChessSquareProps> = ({
       id={square}
       class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85"
       classList={{
-        "bg-red-900 animate-bounce": inCheck() !== null,
+        "bg-red-200/25 animate-pulse": inCheck() !== null,
         "bg-amber-200/25": !inCheck() && lastMove(),
         "bg-stone-500": !inCheck() && !lastMove() && color === "light",
         "bg-stone-600": !inCheck() && !lastMove() && color === "dark",

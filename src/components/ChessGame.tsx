@@ -1,7 +1,7 @@
 import { Chess, type PieceSymbol, type Square } from "chess.js";
 import { createMemo, createSignal } from "solid-js";
 
-import { findBestMove } from "~/lib/chess-ai";
+import { findBestMove } from "~/lib/chess-bot";
 import {
   type PieceRegistry,
   getCapturedPieces,
