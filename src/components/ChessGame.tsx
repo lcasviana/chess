@@ -1,6 +1,6 @@
-import type { PieceSymbol, Square } from "chess.js";
+import type { Color, PieceSymbol, Square } from "chess.js";
 import { Chess } from "chess.js";
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { findBestMove } from "~/lib/chess-bot";
 import {
@@ -17,11 +17,12 @@ import {
 import { ChessBoard } from "./ChessBoard";
 import { ChessCaptured } from "./ChessCaptured";
 import type { ChessSquareInCheck } from "./ChessSquare";
+import { ChessStart } from "./ChessStart";
 
 interface GameHistoryEntry {
   fen: string;
   move: string;
-  capturedPiece?: { type: PieceSymbol; color: "w" | "b" };
+  capturedPiece?: { type: PieceSymbol; color: Color };
   lastMove: { from: Square; to: Square } | null;
 }
 
@@ -38,7 +39,7 @@ export const ChessGame = () => {
   ]);
   const [currentMoveIndex, setCurrentMoveIndex] = createSignal(0);
   const [gameStarted, setGameStarted] = createSignal(false);
-  const [playerColor, setPlayerColor] = createSignal<"w" | "b">("w");
+  const [player, setPlayer] = createSignal<Color>("w");
 
   const isViewingHistory = () => currentMoveIndex() < gameHistory().length - 1;
 
@@ -82,16 +83,16 @@ export const ChessGame = () => {
 
   const startGame = () => {
     setGameStarted(true);
-    if (playerColor() === "b") {
+    if (player() === "b") {
       // AI makes first move
       setTimeout(() => makeAiMove(), 500);
     }
   };
 
-  const handleSquareClick = (square: Square) => {
+  const onSquareClick = (square: Square) => {
     if (isAiThinking() || isViewingHistory() || !gameStarted()) return;
 
-    const expectedColor = playerColor();
+    const expectedColor = player();
     if (game().turn() !== expectedColor) return;
 
     const piece = game().get(square);
@@ -194,7 +195,7 @@ export const ChessGame = () => {
         if (move) {
           const from = move.from;
           const to = move.to;
-          const capturedPieceInfo = move.captured ? { type: move.captured, color: (move.color === "w" ? "b" : "w") as "w" | "b" } : undefined;
+          const capturedPieceInfo = move.captured ? { type: move.captured, color: (move.color === "w" ? "b" : "w") as Color } : undefined;
           const performAiMove = () => {
             const registry = pieceRegistry();
 
@@ -293,7 +294,9 @@ export const ChessGame = () => {
     return id && piece ? { ...piece, id } : null;
   };
 
-  const flip = createMemo(() => playerColor() === "b");
+  const flip = createMemo(() => player() === "b");
+
+  const getSquarePiece = (sq: Square) => piece(sq);
 
   const getSquareSelected = (sq: Square) => selectedSquare() === sq;
 
@@ -310,84 +313,21 @@ export const ChessGame = () => {
   };
 
   return (
-    <div class="grid size-full place-content-center place-items-center gap-6 overflow-auto">
-      {/* Center: Board and controls */}
-      <div class="grid size-full overflow-auto">
-        {/* Color selection - shown before game() starts */}
-        <Show when={!gameStarted()}>
-          <div class="fixed z-10 mb-4 flex flex-col items-center">
-            <h2 class="text-2xl font-bold text-white">Choose Your Color</h2>
-            <div class="flex gap-4">
-              <button onClick={() => setPlayerColor("w")} class="min-w-[140px]">
-                Play as White
-              </button>
-              <button onClick={() => setPlayerColor("b")} class="min-w-[140px]">
-                Play as Black
-              </button>
-            </div>
-            <button onClick={startGame} class="mt-2 min-w-[200px]">
-              Start Game
-            </button>
-          </div>
-        </Show>
+    <div class="relative grid size-full place-content-center place-items-center overflow-auto">
+      <ChessStart gameStarted={gameStarted} player={player} onPlayerSelect={setPlayer} onStartGame={startGame} />
 
-        {/* Status */}
-        <Show when={gameStarted() && isViewingHistory()}>
-          <div class="rounded-lg border border-yellow-500/50 bg-yellow-500/20 px-4 py-2 text-sm font-semibold">
-            Viewing history - Move {currentMoveIndex()} of {gameHistory().length - 1}
-          </div>
-        </Show>
+      <ChessBoard
+        player={player}
+        flip={flip}
+        getSquarePiece={getSquarePiece}
+        getSquareSelected={getSquareSelected}
+        getSquareLastMove={getSquareLastMove}
+        getSquareValidMove={getSquareValidMove}
+        getSquareInCheck={getSquareInCheck}
+        onSquareClick={onSquareClick}
+      />
 
-        <ChessCaptured pieces={capturedPieces} player={playerColor} flip={flip} />
-
-        <ChessBoard
-          getSquarePiece={(sq) => piece(sq)}
-          player={playerColor}
-          flip={flip}
-          onSquareClick={handleSquareClick}
-          getSquareSelected={getSquareSelected}
-          getSquareLastMove={getSquareLastMove}
-          getSquareValidMove={getSquareValidMove}
-          getSquareInCheck={getSquareInCheck}
-        />
-
-        {/* Move list */}
-        <Show when={gameStarted()}>
-          <div class="bg-card border-border fixed bottom-0 max-h-[150px] w-full max-w-[600px] overflow-y-auto rounded-lg border p-4">
-            <div class="mb-2 text-sm font-semibold text-white">Move History</div>
-            <div class="flex flex-wrap gap-x-4 gap-y-1">
-              <For each={gameHistory().slice(1)}>
-                {(entry, idx) => (
-                  <span class={`font-mono text-sm ${idx() === currentMoveIndex() - 1 ? "font-bold text-neutral-100" : "text-muted-neutral-800"}`}>
-                    {Math.floor(idx() / 2) + 1}.{idx() % 2 === 0 ? "" : ".."} {entry.move}
-                  </span>
-                )}
-              </For>
-            </div>
-          </div>
-        </Show>
-
-        {/* Game controls */}
-        <Show when={gameStarted()}>
-          <div class="fixed top-0 flex items-center gap-3">
-            <button onClick={goToPreviousMove} disabled={currentMoveIndex() === 0}>
-              {"<"}
-            </button>
-
-            <button onClick={resetGame} class="gap-2">
-              Reset Game
-            </button>
-
-            <button onClick={goToNextMove} disabled={currentMoveIndex() === gameHistory().length - 1}>
-              {">"}
-            </button>
-
-            <Show when={isAiThinking()}>
-              <span class="ml-2 animate-pulse text-sm">AI is thinking...</span>
-            </Show>
-          </div>
-        </Show>
-      </div>
+      <ChessCaptured pieces={capturedPieces} player={player} flip={flip} />
     </div>
   );
 };

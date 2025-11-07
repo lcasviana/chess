@@ -34,12 +34,14 @@ export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected, flip }
   );
 };
 
-const colorNames: Readonly<Record<Color, string>> = Object.freeze({
+export const colors: Readonly<Color[]> = Object.freeze(["w", "b"]);
+
+export const colorNames: Readonly<Record<Color, string>> = Object.freeze({
   w: "White",
   b: "Black",
 });
 
-const pieceNames: Readonly<Record<PieceSymbol, string>> = Object.freeze({
+export const pieceNames: Readonly<Record<PieceSymbol, string>> = Object.freeze({
   p: "Pawn",
   n: "Knight",
   b: "Bishop",
