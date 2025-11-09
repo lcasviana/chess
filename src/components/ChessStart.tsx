@@ -2,16 +2,12 @@ import type { Color, Piece } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { For, Show } from "solid-js";
 
+import { useChess } from "~/contexts/ChessContext";
+
 import { ChessPiece, colorNames, colors } from "./ChessPiece";
 
-export type ChessStartProps = {
-  gameStarted: Accessor<boolean>;
-  player: Accessor<Color>;
-  onPlayerSelect: (color: Color) => void;
-  onGameStart: () => void;
-};
-
-export const ChessStart: Component<ChessStartProps> = ({ gameStarted, player, onPlayerSelect, onGameStart }: ChessStartProps): JSX.Element => {
+export const ChessStart: Component = (): JSX.Element => {
+  const { gameStarted, player, setPlayer, onGameStart } = useChess();
   return (
     <Show when={!gameStarted()}>
       <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-xs">
@@ -28,7 +24,7 @@ export const ChessStart: Component<ChessStartProps> = ({ gameStarted, player, on
                   }}
                   aria-label={`Play As ${colorNames[color]}`}
                   aria-pressed={player() === color}
-                  onClick={(): void => onPlayerSelect(color)}
+                  onClick={(): void => setPlayer(color)}
                 >
                   <div class="size-10">
                     <ChessPiece piece={colorPiece[color]} selected={falsy} flip={falsy} />

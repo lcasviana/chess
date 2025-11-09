@@ -1,22 +1,19 @@
-import type { Color, PieceSymbol } from "chess.js";
+import type { PieceSymbol } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { createMemo, Index, Show } from "solid-js";
+
+import { useChess } from "~/contexts/ChessContext";
 
 import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";
 
-export type ChessCapturedProps = {
-  pieces: Accessor<ChessPieceType[]>;
-  player: Accessor<Color>;
-  flip: Accessor<boolean>;
-};
-
-export const ChessCaptured: Component<ChessCapturedProps> = ({ pieces, player, flip }: ChessCapturedProps): JSX.Element => {
+export const ChessCaptured: Component = (): JSX.Element => {
+  const { capturedPieces, player, flip } = useChess();
   const whiteCaptured: Accessor<ChessPieceType[]> = createMemo((): ChessPieceType[] =>
-    sortPieces(pieces().filter(({ color }: ChessPieceType): boolean => color === "b")),
+    sortPieces(capturedPieces().filter(({ color }: ChessPieceType): boolean => color === "b")),
   );
   const blackCaptured: Accessor<ChessPieceType[]> = createMemo((): ChessPieceType[] =>
-    sortPieces(pieces().filter(({ color }: ChessPieceType): boolean => color === "w")).reverse(),
+    sortPieces(capturedPieces().filter(({ color }: ChessPieceType): boolean => color === "w")).reverse(),
   );
   const whitePoints: Accessor<number> = createMemo((): number => calculatePoints(whiteCaptured()));
   const blackPoints: Accessor<number> = createMemo((): number => calculatePoints(blackCaptured()));

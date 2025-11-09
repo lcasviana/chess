@@ -6,7 +6,9 @@ import { createSignal } from "solid-js";
 import type { ChessPieceType } from "~/components/ChessPiece";
 import type { ChessSquareInCheck } from "~/components/ChessSquare";
 
-export function chessStore(): ChessStore {
+let storeInstance: ChessStore | null = null;
+
+function createChessStore(): ChessStore {
   const chess = new Chess();
 
   const [gameStarted, setGameStarted] = createSignal<boolean>(false);
@@ -47,6 +49,10 @@ export function chessStore(): ChessStore {
     getSquareInCheck,
     onSquareClick,
   };
+}
+
+export function chessStore(): ChessStore {
+  return (storeInstance ??= createChessStore());
 }
 
 export type ChessStore = {

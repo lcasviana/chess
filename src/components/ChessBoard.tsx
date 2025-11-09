@@ -1,33 +1,16 @@
-import type { Color, Square } from "chess.js";
+import type { Square } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { For } from "solid-js";
+
+import { useChess } from "~/contexts/ChessContext";
 
 import { ChessCoordinates, files, ranks } from "./ChessCoordinates";
 import type { ChessPieceType } from "./ChessPiece";
 import type { ChessSquareInCheck, ChessSquareProps } from "./ChessSquare";
 import { ChessSquare, squareColor } from "./ChessSquare";
 
-export type ChessBoardProps = {
-  player: Accessor<Color>;
-  flip: Accessor<boolean>;
-  getSquarePiece: (square: Square) => ChessPieceType | null;
-  getSquareSelected: (square: Square) => boolean;
-  getSquareLastMove: (square: Square) => boolean;
-  getSquareValidMove: (square: Square) => boolean;
-  getSquareInCheck: (square: Square) => ChessSquareInCheck | null;
-  onSquareClick: (square: Square) => void;
-};
-
-export const ChessBoard: Component<ChessBoardProps> = ({
-  player,
-  flip,
-  getSquarePiece,
-  getSquareSelected,
-  getSquareLastMove,
-  getSquareValidMove,
-  getSquareInCheck,
-  onSquareClick,
-}: ChessBoardProps): JSX.Element => {
+export const ChessBoard: Component = (): JSX.Element => {
+  const { player, flip, getSquarePiece, getSquareSelected, getSquareLastMove, getSquareValidMove, getSquareInCheck, onSquareClick } = useChess();
   return (
     <div class="grid aspect-square size-full overflow-auto bg-stone-800 shadow-sm shadow-neutral-950">
       <div
