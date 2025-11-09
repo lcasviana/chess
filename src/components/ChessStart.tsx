@@ -8,10 +8,10 @@ export type ChessStartProps = {
   gameStarted: Accessor<boolean>;
   player: Accessor<Color>;
   onPlayerSelect: (color: Color) => void;
-  onStartGame: () => void;
+  onGameStart: () => void;
 };
 
-export const ChessStart: Component<ChessStartProps> = ({ gameStarted, player, onPlayerSelect, onStartGame }: ChessStartProps): JSX.Element => {
+export const ChessStart: Component<ChessStartProps> = ({ gameStarted, player, onPlayerSelect, onGameStart }: ChessStartProps): JSX.Element => {
   return (
     <Show when={!gameStarted()}>
       <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-xs">
@@ -44,7 +44,7 @@ export const ChessStart: Component<ChessStartProps> = ({ gameStarted, player, on
               "bg-zinc-900 text-zinc-300 hover:bg-zinc-800": player() === "b",
             }}
             aria-label="Start Game"
-            onClick={onStartGame}
+            onClick={onGameStart}
           >
             Start Game
           </button>

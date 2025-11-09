@@ -26,7 +26,7 @@ export const ChessCaptured: Component<ChessCapturedProps> = ({ pieces, player, f
       <ChessCapturedPieces pieces={whiteCaptured} />
       <div class="grow" classList={{ "text-left": points() > 0, "text-right": points() < 0 }}>
         <Show when={points()}>
-          {(points) => (
+          {(points: Accessor<number>): JSX.Element => (
             <span
               class="inline-block text-base font-semibold"
               classList={{
