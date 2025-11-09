@@ -4,7 +4,7 @@ import { createContext, useContext } from "solid-js";
 import type { ChessStore } from "~/stores/chess.store";
 import { chessStore } from "~/stores/chess.store";
 
-const ChessContext: Context<ChessStore | undefined> = createContext<ChessStore>();
+const ChessContext: Context<ChessStore | undefined> = createContext<ChessStore>(undefined);
 
 export const ChessProvider: ParentComponent = (props: { children?: JSX.Element }): JSX.Element => {
   const store: ChessStore = chessStore();
