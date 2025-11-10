@@ -7,6 +7,7 @@ import { createStore } from "solid-js/store";
 import { files } from "~/components/ChessCoordinates";
 import type { ChessPieceType } from "~/components/ChessPiece";
 import type { ChessSquareInCheck } from "~/components/ChessSquare";
+import { createChessBot } from "~/services/chess-bot";
 
 let storeInstance: ChessStore | null = null;
 
@@ -48,6 +49,8 @@ function createChessStore(): ChessStore {
         setBoard(square, piece);
       });
     });
+
+    console.log("[Store] Board synced, current turn:", chess.turn());
   };
 
   const syncGameState = () => {
@@ -55,10 +58,51 @@ function createChessStore(): ChessStore {
     setIsCheck(chess.isCheck());
     setIsCheckmate(chess.isCheckmate());
     setIsGameOver(chess.isGameOver());
+
+    // Trigger bot move if it's the bot's turn
+    if (!chess.isGameOver() && chess.turn() !== player()) {
+      setTimeout(() => makeComputerMove(), 500);
+    }
+  };
+
+  const makeComputerMove = () => {
+    if (chess.isGameOver() || chess.turn() === player()) return;
+
+    console.log("[Bot] Starting move, current turn:", chess.turn());
+
+    try {
+      const bot = createChessBot(chess);
+      const move = bot.getBestMove();
+
+      if (move) {
+        console.log("[Bot] Selected move:", move.from, "→", move.to);
+        const result = chess.move(move);
+
+        if (result) {
+          console.log("[Bot] Move executed, captured:", result.captured);
+          batch(() => {
+            syncBoardToStore();
+            // Update game state without triggering another bot move
+            setTurn(chess.turn());
+            setIsCheck(chess.isCheck());
+            setIsCheckmate(chess.isCheckmate());
+            setIsGameOver(chess.isGameOver());
+            setLastMove({ from: move.from, to: move.to });
+            if (result.captured) {
+              setCapturedPieces([...capturedPieces(), { color: result.color === "w" ? "b" : "w", type: result.captured }]);
+            }
+          });
+        }
+      }
+    } catch (error) {
+      console.error("[Bot] Error making move:", error);
+    }
   };
 
   const flip = () => player() === "b";
-  const getSquarePiece = (square: Square) => board[square];
+  const getSquarePiece = (square: Square) => {
+    return board[square];
+  };
 
   const getSquareSelected = (square: Square) => selectedSquare() === square;
   const getSquareLastMove = (square: Square) => {
@@ -75,7 +119,13 @@ function createChessStore(): ChessStore {
     return null;
   };
 
-  const onGameStart = () => setGameStarted(true);
+  const onGameStart = () => {
+    setGameStarted(true);
+    // If player chose black, bot (white) makes the first move
+    if (player() === "b") {
+      setTimeout(() => makeComputerMove(), 500);
+    }
+  };
 
   const onSquareClick = (square: Square) => {
     if (isGameOver() || turn() !== player()) return;
