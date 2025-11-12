@@ -8,28 +8,29 @@ export type ChessPieceType = {
 };
 
 export type ChessPieceProps = {
-  piece: Accessor<ChessPieceType>;
+  id?: Accessor<string | undefined>;
+  color: Accessor<Color>;
+  type: Accessor<PieceSymbol>;
   selected?: Accessor<boolean>;
   flip?: Accessor<boolean>;
 };
 
-export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected, flip }: ChessPieceProps): JSX.Element => {
-  const { id, color, type } = piece();
+export const ChessPiece: Component<ChessPieceProps> = ({ id, color, type, selected, flip }: ChessPieceProps): JSX.Element => {
   return (
     <svg
-      id={id}
-      style={{ "view-transition-name": id }}
+      id={id?.()}
+      style={{ "view-transition-name": id?.() }}
       class="size-full drop-shadow-xs transition-all duration-200"
       classList={{
-        "fill-zinc-300 drop-shadow-zinc-900": color === "w",
-        "fill-zinc-900 drop-shadow-zinc-300": color === "b",
+        "fill-zinc-300 drop-shadow-zinc-900": color() === "w",
+        "fill-zinc-900 drop-shadow-zinc-300": color() === "b",
         "scale-125": selected?.(),
         "rotate-180": flip?.(),
       }}
-      aria-label={`${colorNames[color]} ${pieceNames[type]}`}
+      aria-label={`${colorNames[color()]} ${pieceNames[type()]}`}
       role="img"
     >
-      <use href={`./chess.svg#${type}`} />
+      <use href={`./chess.svg#${type()}`} />
     </svg>
   );
 };

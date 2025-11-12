@@ -1,16 +1,14 @@
 import type { Square } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
-import { For } from "solid-js";
+import { Index } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
 
 import { ChessCoordinates, files, ranks } from "./ChessCoordinates";
-import type { ChessPieceType } from "./ChessPiece";
-import type { ChessSquareInCheck, ChessSquareProps } from "./ChessSquare";
 import { ChessSquare, squareColor } from "./ChessSquare";
 
 export const ChessBoard: Component = (): JSX.Element => {
-  const { player, flip, getSquarePiece, getSquareSelected, getSquareLastMove, getSquareValidMove, getSquareInCheck, onSquareClick } = useChess();
+  const { flip } = useChess();
   return (
     <div class="grid aspect-square size-full overflow-auto bg-stone-800 shadow-sm shadow-neutral-950">
       <div
@@ -26,30 +24,11 @@ export const ChessBoard: Component = (): JSX.Element => {
 
         {/* Chess board */}
         <div role="grid" aria-label="Chess Board" class="grid grid-cols-8 grid-rows-8" style={{ "grid-area": "2 / 2 / 10 / 10" }}>
-          <For each={squares}>
-            {(square: Square, index: Accessor<number>): JSX.Element => {
-              const piece: ChessSquareProps["piece"] = (): ChessPieceType | null => getSquarePiece(square);
-              const selected: ChessSquareProps["selected"] = (): boolean => getSquareSelected(square);
-              const lastMove: ChessSquareProps["lastMove"] = (): boolean => getSquareLastMove(square);
-              const validMove: ChessSquareProps["validMove"] = (): boolean => getSquareValidMove(square);
-              const inCheck: ChessSquareProps["inCheck"] = (): ChessSquareInCheck | null => getSquareInCheck(square);
-              const onClick: ChessSquareProps["onClick"] = (): void => onSquareClick(square);
-              return (
-                <ChessSquare
-                  square={square}
-                  color={squareColor(index())}
-                  player={player}
-                  flip={flip}
-                  piece={piece}
-                  selected={selected}
-                  lastMove={lastMove}
-                  validMove={validMove}
-                  inCheck={inCheck}
-                  onClick={onClick}
-                />
-              );
+          <Index each={squares}>
+            {(square: Accessor<Square>, index: number): JSX.Element => {
+              return <ChessSquare square={square} color={squareColor(index)} />;
             }}
-          </For>
+          </Index>
         </div>
 
         {/* Right Rank Numbers */}

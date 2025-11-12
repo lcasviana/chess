@@ -1,4 +1,4 @@
-import type { Color, Piece } from "chess.js";
+import type { Color, Piece, PieceSymbol } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { For, Show } from "solid-js";
 
@@ -27,7 +27,12 @@ export const ChessStart: Component = (): JSX.Element => {
                   onClick={(): void => setPlayer(color)}
                 >
                   <div class="size-10">
-                    <ChessPiece piece={colorPiece[color]} selected={falsy} flip={falsy} />
+                    <ChessPiece
+                      color={(): Color => colorPiece[color]().color}
+                      type={(): PieceSymbol => colorPiece[color]().type}
+                      selected={falsy}
+                      flip={falsy}
+                    />
                   </div>
                 </button>
               )}

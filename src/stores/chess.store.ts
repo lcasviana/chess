@@ -2,11 +2,9 @@ import type { Color, Square } from "chess.js";
 import { Chess } from "chess.js";
 import type { Accessor } from "solid-js";
 import { batch, createSignal } from "solid-js";
-import { createStore } from "solid-js/store";
 
 import { files } from "~/components/ChessCoordinates";
 import type { ChessPieceType } from "~/components/ChessPiece";
-import type { ChessSquareInCheck } from "~/components/ChessSquare";
 import { createChessBot } from "~/services/chess-bot";
 
 let storeInstance: ChessStore | null = null;
@@ -34,23 +32,29 @@ function createChessStore(): ChessStore {
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
   const [validMoves, setValidMoves] = createSignal<Square[]>([]);
-  const [board, setBoard] = createStore<Record<Square, ChessPieceType | null>>(initializeBoardFromChess(chess));
+  const [board, setBoard] = createSignal<Record<Square, ChessPieceType | null>>(initializeBoardFromChess(chess));
   const [turn, setTurn] = createSignal<Color>(chess.turn());
   const [isCheck, setIsCheck] = createSignal<boolean>(chess.isCheck());
   const [isCheckmate, setIsCheckmate] = createSignal<boolean>(chess.isCheckmate());
   const [isGameOver, setIsGameOver] = createSignal<boolean>(chess.isGameOver());
 
   const syncBoardToStore = () => {
-    const chessBoard = chess.board();
+    setTimeout(() => {
+      const chessBoard = chess.board();
+      console.log(chessBoard);
 
-    chessBoard.forEach((row, rankIndex) => {
-      row.forEach((piece, fileIndex) => {
-        const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
-        setBoard(square, piece);
+      const _board = {} as Record<Square, ChessPieceType | null>;
+      chessBoard.forEach((row, rankIndex) => {
+        row.forEach((piece, fileIndex) => {
+          const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
+          _board[square] = piece;
+        });
       });
-    });
+      setBoard(_board);
+      console.log(board());
 
-    console.log("[Store] Board synced, current turn:", chess.turn());
+      console.log("[Store] Board synced, current turn:", chess.turn());
+    });
   };
 
   const syncGameState = () => {
@@ -100,24 +104,6 @@ function createChessStore(): ChessStore {
   };
 
   const flip = () => player() === "b";
-  const getSquarePiece = (square: Square) => {
-    return board[square];
-  };
-
-  const getSquareSelected = (square: Square) => selectedSquare() === square;
-  const getSquareLastMove = (square: Square) => {
-    const move = lastMove();
-    return move ? move.from === square || move.to === square : false;
-  };
-  const getSquareValidMove = (square: Square) => validMoves().includes(square);
-
-  const getSquareInCheck = (square: Square): ChessSquareInCheck | null => {
-    const piece = board[square];
-    if (!piece || piece.type !== "k" || piece.color !== turn()) return null;
-    if (isCheckmate()) return "checkmate";
-    if (isCheck()) return "check";
-    return null;
-  };
 
   const onGameStart = () => {
     setGameStarted(true);
@@ -130,7 +116,7 @@ function createChessStore(): ChessStore {
   const onSquareClick = (square: Square) => {
     if (isGameOver() || turn() !== player()) return;
 
-    const clickedPiece = board[square];
+    const clickedPiece = board()[square];
     const currentSelection = selectedSquare();
 
     if (!currentSelection) {
@@ -154,7 +140,7 @@ function createChessStore(): ChessStore {
 
     if (validMoves().includes(square)) {
       try {
-        const piece = board[currentSelection];
+        const piece = board()[currentSelection];
         const isPawnPromotion = piece?.type === "p" && ((piece.color === "w" && square[1] === "8") || (piece.color === "b" && square[1] === "1"));
 
         const move = chess.move({
@@ -169,7 +155,7 @@ function createChessStore(): ChessStore {
             syncGameState();
             setLastMove({ from: currentSelection, to: square });
             if (move.captured) {
-              setCapturedPieces([...capturedPieces(), { color: move.color === "w" ? "b" : "w", type: move.captured }]);
+              setCapturedPieces((prev) => [...prev, { color: move.color === "w" ? "b" : "w", type: move.captured! }]);
             }
             setSelectedSquare(null);
             setValidMoves([]);
@@ -190,14 +176,12 @@ function createChessStore(): ChessStore {
     player,
     setPlayer,
     flip,
-    capturedPieces,
-    getSquarePiece,
-    getSquareSelected,
-    getSquareLastMove,
-    getSquareValidMove,
-    getSquareInCheck,
-    onSquareClick,
     board,
+    selectedSquare,
+    validMoves,
+    lastMove,
+    capturedPieces,
+    onSquareClick,
     turn,
     isCheck,
     isCheckmate,
@@ -216,14 +200,12 @@ export type ChessStore = {
   player: Accessor<Color>;
   setPlayer: (color: Color) => void;
   flip: Accessor<boolean>;
+  board: Accessor<Record<Square, ChessPieceType | null>>;
+  selectedSquare: Accessor<Square | null>;
+  validMoves: Accessor<Square[]>;
+  lastMove: Accessor<{ from: Square; to: Square } | null>;
   capturedPieces: Accessor<ChessPieceType[]>;
-  getSquarePiece: (square: Square) => ChessPieceType | null;
-  getSquareSelected: (square: Square) => boolean;
-  getSquareLastMove: (square: Square) => boolean;
-  getSquareValidMove: (square: Square) => boolean;
-  getSquareInCheck: (square: Square) => ChessSquareInCheck | null;
   onSquareClick: (square: Square) => void;
-  board: Record<Square, ChessPieceType | null>;
   turn: Accessor<Color>;
   isCheck: Accessor<boolean>;
   isCheckmate: Accessor<boolean>;

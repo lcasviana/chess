@@ -52,7 +52,7 @@ const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = ({ pieces }: Ch
       <Index each={pieces()}>
         {(piece: Accessor<ChessPieceType>): JSX.Element => (
           <div class="size-5">
-            <ChessPiece piece={piece} />
+            <ChessPiece id={() => piece().id} color={() => piece().color} type={() => piece().type} />
           </div>
         )}
       </Index>
