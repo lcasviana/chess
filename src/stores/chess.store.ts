@@ -41,7 +41,6 @@ function createChessStore(): ChessStore {
   const syncBoardToStore = () => {
     setTimeout(() => {
       const chessBoard = chess.board();
-      console.log(chessBoard);
 
       const _board = {} as Record<Square, ChessPieceType | null>;
       chessBoard.forEach((row, rankIndex) => {
@@ -51,9 +50,6 @@ function createChessStore(): ChessStore {
         });
       });
       setBoard(_board);
-      console.log(board());
-
-      console.log("[Store] Board synced, current turn:", chess.turn());
     });
   };
 
@@ -72,18 +68,14 @@ function createChessStore(): ChessStore {
   const makeComputerMove = () => {
     if (chess.isGameOver() || chess.turn() === player()) return;
 
-    console.log("[Bot] Starting move, current turn:", chess.turn());
-
     try {
       const bot = createChessBot(chess);
       const move = bot.getBestMove();
 
       if (move) {
-        console.log("[Bot] Selected move:", move.from, "→", move.to);
         const result = chess.move(move);
 
         if (result) {
-          console.log("[Bot] Move executed, captured:", result.captured);
           batch(() => {
             syncBoardToStore();
             // Update game state without triggering another bot move

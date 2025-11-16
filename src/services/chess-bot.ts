@@ -53,7 +53,6 @@ export class ChessBot {
         const moves = this.chess.moves({ verbose: true });
         const move = moves.find((m) => this.moveToSAN(m) === bookMove);
         if (move) {
-          console.log(`[Bot] Using opening book: ${bookMove}`);
           return move;
         }
       }
@@ -61,11 +60,6 @@ export class ChessBot {
 
     const color = this.chess.turn();
     const result = this.minimax(this.chess, this.config.searchDepth, -Infinity, Infinity, true, color);
-
-    console.log(
-      `[Bot] Searched ${this.nodeCount} nodes, best move: ${result.move ? this.moveToSAN(result.move) : "none"}, eval: ${result.score.toFixed(2)}`,
-    );
-
     return result.move;
   }
 
@@ -112,7 +106,6 @@ export class ChessBot {
         const similarMoves = this.findSimilarMoves(moves, maxEval, chess, botColor);
         if (similarMoves.length > 1) {
           bestMove = similarMoves[Math.floor(Math.random() * similarMoves.length)];
-          console.log(`[Bot] ${similarMoves.length} similar moves found, randomly selected: ${this.moveToSAN(bestMove)}`);
         }
       }
 
