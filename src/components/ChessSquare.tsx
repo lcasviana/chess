@@ -7,42 +7,48 @@ import { useChess } from "~/contexts/ChessContext";
 import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";
 
-export type ChessSquareColor = "light" | "dark";
+export type ChessSquareColor = "light" | "dark" | null;
 export type ChessSquareInCheck = "check" | "checkmate" | null;
 
 export type ChessSquareProps = {
-  square: Accessor<Square>;
+  square: Square;
   color: ChessSquareColor;
 };
 
 export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: ChessSquareProps): JSX.Element => {
-  const { player, flip, board, selectedSquare, validMoves, lastMove, onSquareClick } = useChess();
+  const { player, flip, board, selectedSquare, validMoves, lastMove, onSquareClick, isCheck, isCheckmate, turn } = useChess();
 
-  const piece = () => board()[square()];
-  const isSelected = () => selectedSquare() === square();
-  const isValidMove = () => validMoves().includes(square());
-  const isLastMove = () => lastMove()?.from === square() || lastMove()?.to === square();
-  const isInCheck = () => null;
+  const piece = () => board()[square];
+  const isSelected = () => selectedSquare() === square;
+  const isValidMove = () => validMoves().includes(square);
+  const isLastMove = () => lastMove()?.from === square || lastMove()?.to === square;
+  const isInCheck = (): ChessSquareInCheck => {
+    if (piece()?.type !== "k" || piece()?.color !== turn()) return null;
+    if (isCheckmate()) return "checkmate";
+    if (isCheck()) return "check";
+    return null;
+  };
 
   return (
     <div
-      id={square()}
+      id={square}
       style={{ padding: "15%" }}
       class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85"
       classList={{
-        "bg-red-200/25 animate-pulse": isInCheck() !== null,
+        "bg-red-200/25": isInCheck() !== null,
+        "animate-pulse": isInCheck() === "check",
         "bg-amber-200/25": !isInCheck() && isLastMove(),
         "bg-stone-500": !isInCheck() && !isLastMove() && color === "light",
         "bg-stone-600": !isInCheck() && !isLastMove() && color === "dark",
         "cursor-pointer": isValidMove() || piece()?.color === player(),
       }}
-      aria-label={`Square ${square().toUpperCase()}`}
-      onClick={() => onSquareClick(square())}
+      aria-label={`Square ${square.toUpperCase()}`}
+      onClick={() => onSquareClick(square)}
     >
       <Show when={piece()}>
         {(piece: Accessor<ChessPieceType>): JSX.Element => (
           <div class="flex size-full items-center justify-center">
-            <ChessPiece id={() => piece().id} color={() => piece().color} type={() => piece().type} selected={isSelected} flip={flip} />
+            <ChessPiece piece={piece} selected={isSelected} flip={flip} />
           </div>
         )}
       </Show>
@@ -55,10 +61,3 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
     </div>
   );
 };
-
-export function squareColor(index: number): ChessSquareColor {
-  const fileIndex: number = index % 8;
-  const rankIndex: number = Math.floor(index / 8);
-  const color: ChessSquareColor = (fileIndex + rankIndex) % 2 === 0 ? "dark" : "light";
-  return color;
-}

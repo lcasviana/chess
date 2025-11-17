@@ -1,9 +1,11 @@
-import type { Color, Piece, PieceSymbol } from "chess.js";
+import type { Color } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { For, Show } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
+import { falsy } from "~/utils/constants";
 
+import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece, colorNames, colors } from "./ChessPiece";
 
 export const ChessStart: Component = (): JSX.Element => {
@@ -27,12 +29,7 @@ export const ChessStart: Component = (): JSX.Element => {
                   onClick={(): void => setPlayer(color)}
                 >
                   <div class="size-10">
-                    <ChessPiece
-                      color={(): Color => colorPiece[color]().color}
-                      type={(): PieceSymbol => colorPiece[color]().type}
-                      selected={falsy}
-                      flip={falsy}
-                    />
+                    <ChessPiece piece={colorPiece[color]} selected={falsy} flip={falsy} />
                   </div>
                 </button>
               )}
@@ -55,7 +52,6 @@ export const ChessStart: Component = (): JSX.Element => {
   );
 };
 
-const falsy: Accessor<false> = (): false => false;
-const whiteKing: Accessor<Piece> = (): Piece => ({ color: "w", type: "k" });
-const blackKing: Accessor<Piece> = (): Piece => ({ color: "b", type: "k" });
-const colorPiece: Readonly<Record<Color, Accessor<Piece>>> = Object.freeze({ w: whiteKing, b: blackKing });
+const whiteKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "", color: "w", type: "k" });
+const blackKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "", color: "b", type: "k" });
+const colorPiece: Readonly<Record<Color, Accessor<ChessPieceType>>> = Object.freeze({ w: whiteKing, b: blackKing });

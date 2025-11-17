@@ -3,6 +3,7 @@ import type { Accessor, Component, JSX } from "solid-js";
 import { createMemo, Index, Show } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
+import { falsy } from "~/utils/constants";
 
 import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";
@@ -52,7 +53,7 @@ const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = ({ pieces }: Ch
       <Index each={pieces()}>
         {(piece: Accessor<ChessPieceType>): JSX.Element => (
           <div class="size-5">
-            <ChessPiece id={() => piece().id} color={() => piece().color} type={() => piece().type} />
+            <ChessPiece piece={piece} selected={falsy} flip={falsy} />
           </div>
         )}
       </Index>
