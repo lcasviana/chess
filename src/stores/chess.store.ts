@@ -10,14 +10,20 @@ import { createChessBot } from "~/services/chess-bot";
 
 let storeInstance: ChessStore | null = null;
 
-function initializeBoardFromChess(chess: Chess): Record<Square, ChessPieceType | null> {
+function initializeBoardFromChess(chess: Chess, generateId: () => string, idMap: Map<Square, string>): Record<Square, ChessPieceType | null> {
   const boardState: Record<string, ChessPieceType | null> = {};
   const chessBoard = chess.board();
 
   chessBoard.forEach((row, rankIndex) => {
     row.forEach((piece, fileIndex) => {
       const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
-      boardState[square] = (piece ? { ...piece, id: "" } : null) as ChessPieceType | null;
+      if (piece) {
+        const id = generateId();
+        idMap.set(square, id);
+        boardState[square] = { ...piece, id };
+      } else {
+        boardState[square] = null;
+      }
     });
   });
 
@@ -27,31 +33,57 @@ function initializeBoardFromChess(chess: Chess): Record<Square, ChessPieceType |
 function createChessStore(): ChessStore {
   const chess = new Chess();
 
+  // Piece ID management for view transitions
+  let pieceIdCounter = 1;
+  const pieceIdMap = new Map<Square, string>(); // Tracks which piece ID is on which square
+
+  const generatePieceId = (): string => {
+    return `p${pieceIdCounter++}`;
+  };
+
   const [gameStarted, setGameStarted] = createSignal<boolean>(false);
   const [player, setPlayer] = createSignal<Color>("w");
   const [capturedPieces, setCapturedPieces] = createSignal<ChessPieceType[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
   const [validMoves, setValidMoves] = createSignal<Square[]>([]);
-  const [board, setBoard] = createSignal<Record<Square, ChessPieceType | null>>(initializeBoardFromChess(chess));
+  const [board, setBoard] = createSignal<Record<Square, ChessPieceType | null>>(initializeBoardFromChess(chess, generatePieceId, pieceIdMap));
   const [turn, setTurn] = createSignal<Color>(chess.turn());
   const [isCheck, setIsCheck] = createSignal<boolean>(chess.isCheck());
   const [isCheckmate, setIsCheckmate] = createSignal<boolean>(chess.isCheckmate());
   const [isGameOver, setIsGameOver] = createSignal<boolean>(chess.isGameOver());
 
   const syncBoardToStore = () => {
-    setTimeout(() => {
-      const chessBoard = chess.board();
+    const chessBoard = chess.board();
 
-      const _board = {} as Record<Square, ChessPieceType | null>;
-      chessBoard.forEach((row, rankIndex) => {
-        row.forEach((piece, fileIndex) => {
-          const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
-          _board[square] = (piece ? { ...piece, id: "" } : null) as ChessPieceType | null;
-        });
+    const _board = {} as Record<Square, ChessPieceType | null>;
+    const currentSquares = new Set<Square>();
+
+    chessBoard.forEach((row, rankIndex) => {
+      row.forEach((piece, fileIndex) => {
+        const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
+        currentSquares.add(square);
+        if (piece) {
+          // Preserve existing ID from the map, or generate new one for promotions
+          const id = pieceIdMap.get(square) || generatePieceId();
+          if (!pieceIdMap.has(square)) {
+            pieceIdMap.set(square, id);
+          }
+          _board[square] = { ...piece, id };
+        } else {
+          _board[square] = null;
+        }
       });
-      setBoard(_board);
     });
+
+    // Clean up IDs for squares that no longer have pieces
+    for (const [square] of pieceIdMap) {
+      if (!currentSquares.has(square) || _board[square] === null) {
+        pieceIdMap.delete(square);
+      }
+    }
+
+    setBoard(_board);
   };
 
   const syncGameState = () => {
@@ -74,21 +106,40 @@ function createChessStore(): ChessStore {
       const move = bot.getBestMove();
 
       if (move) {
+        // Get the ID of the piece being moved and captured (if any)
+        const movingPieceId = pieceIdMap.get(move.from as Square);
+        const capturedPieceId = pieceIdMap.get(move.to as Square);
+
         const result = chess.move(move);
 
         if (result) {
-          batch(() => {
-            syncBoardToStore();
-            // Update game state without triggering another bot move
-            setTurn(chess.turn());
-            setIsCheck(chess.isCheck());
-            setIsCheckmate(chess.isCheckmate());
-            setIsGameOver(chess.isGameOver());
-            setLastMove({ from: move.from, to: move.to });
-            if (result.captured) {
-              setCapturedPieces([...capturedPieces(), { id: "", color: result.color === "w" ? "b" : "w", type: result.captured }]);
-            }
-          });
+          const performUpdate = () => {
+            batch(() => {
+              // Update piece ID mappings: move piece from source to destination
+              if (movingPieceId) {
+                pieceIdMap.delete(move.from as Square);
+                pieceIdMap.set(move.to as Square, movingPieceId);
+              }
+
+              syncBoardToStore();
+              // Update game state without triggering another bot move
+              setTurn(chess.turn());
+              setIsCheck(chess.isCheck());
+              setIsCheckmate(chess.isCheckmate());
+              setIsGameOver(chess.isGameOver());
+              setLastMove({ from: move.from, to: move.to });
+              if (result.captured && capturedPieceId) {
+                setCapturedPieces([...capturedPieces(), { id: capturedPieceId, color: result.color === "w" ? "b" : "w", type: result.captured }]);
+              }
+            });
+          };
+
+          // Wrap entire update in view transition for smooth animations
+          if (document.startViewTransition) {
+            document.startViewTransition(performUpdate);
+          } else {
+            performUpdate();
+          }
         }
       }
     } catch (error) {
@@ -138,6 +189,10 @@ function createChessStore(): ChessStore {
         const piece = board()[currentSelection];
         const isPawnPromotion = piece?.type === "p" && ((piece.color === "w" && square[1] === "8") || (piece.color === "b" && square[1] === "1"));
 
+        // Get the ID of the piece being moved and captured (if any)
+        const movingPieceId = pieceIdMap.get(currentSelection);
+        const capturedPieceId = pieceIdMap.get(square);
+
         const move = chess.move({
           from: currentSelection,
           to: square,
@@ -145,16 +200,31 @@ function createChessStore(): ChessStore {
         });
 
         if (move) {
-          batch(() => {
-            syncBoardToStore();
-            syncGameState();
-            setLastMove({ from: currentSelection, to: square });
-            if (move.captured) {
-              setCapturedPieces((prev) => [...prev, { id: "", color: move.color === "w" ? "b" : "w", type: move.captured! }]);
-            }
-            setSelectedSquare(null);
-            setValidMoves([]);
-          });
+          const performUpdate = () => {
+            batch(() => {
+              // Update piece ID mappings: move piece from source to destination
+              if (movingPieceId) {
+                pieceIdMap.delete(currentSelection);
+                pieceIdMap.set(square, movingPieceId);
+              }
+
+              syncBoardToStore();
+              syncGameState();
+              setLastMove({ from: currentSelection, to: square });
+              if (move.captured && capturedPieceId) {
+                setCapturedPieces((prev) => [...prev, { id: capturedPieceId, color: move.color === "w" ? "b" : "w", type: move.captured! }]);
+              }
+              setSelectedSquare(null);
+              setValidMoves([]);
+            });
+          };
+
+          // Wrap entire update in view transition for smooth animations
+          if (document.startViewTransition) {
+            document.startViewTransition(performUpdate);
+          } else {
+            performUpdate();
+          }
         }
       } catch (error) {
         console.error(error);

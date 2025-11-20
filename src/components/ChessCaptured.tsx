@@ -1,6 +1,6 @@
 import type { PieceSymbol } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
-import { createMemo, Index, Show } from "solid-js";
+import { createMemo, For, Show } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
@@ -50,13 +50,13 @@ export type ChessCapturedPiecesProps = {
 const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = ({ pieces }: ChessCapturedPiecesProps): JSX.Element => {
   return (
     <div class="flex flex-wrap items-center">
-      <Index each={pieces()}>
-        {(piece: Accessor<ChessPieceType>): JSX.Element => (
+      <For each={pieces()} fallback={<></>}>
+        {(piece: ChessPieceType): JSX.Element => (
           <div class="size-5">
-            <ChessPiece piece={piece} selected={falsy} flip={falsy} />
+            <ChessPiece piece={(): ChessPieceType => piece} selected={falsy} flip={falsy} />
           </div>
         )}
-      </Index>
+      </For>
     </div>
   );
 };
