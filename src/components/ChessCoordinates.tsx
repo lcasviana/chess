@@ -21,7 +21,10 @@ export const ChessCoordinates: Component<ChessCoordinatesProps> = ({ type, gridA
     >
       <For each={coordinates[type]}>
         {(label: number | string): JSX.Element => (
-          <div class="m-auto flex size-5 items-center justify-center text-sm font-semibold text-stone-50/50" classList={{ "rotate-180": flip() }}>
+          <div
+            class="m-auto flex size-5 items-center justify-center text-sm font-semibold text-stone-50/50 select-none"
+            classList={{ "rotate-180": flip() }}
+          >
             {label}
           </div>
         )}

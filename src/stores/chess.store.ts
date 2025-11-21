@@ -52,6 +52,10 @@ function createChessStore(): ChessStore {
   const [isCheck, setIsCheck] = createSignal<boolean>(chess.isCheck());
   const [isCheckmate, setIsCheckmate] = createSignal<boolean>(chess.isCheckmate());
   const [isGameOver, setIsGameOver] = createSignal<boolean>(chess.isGameOver());
+  const [isDraw, setIsDraw] = createSignal<boolean>(chess.isDraw());
+  const [isStalemate, setIsStalemate] = createSignal<boolean>(chess.isStalemate());
+  const [isThreefoldRepetition, setIsThreefoldRepetition] = createSignal<boolean>(chess.isThreefoldRepetition());
+  const [isInsufficientMaterial, setIsInsufficientMaterial] = createSignal<boolean>(chess.isInsufficientMaterial());
 
   const syncBoardToStore = () => {
     const chessBoard = chess.board();
@@ -91,6 +95,10 @@ function createChessStore(): ChessStore {
     setIsCheck(chess.isCheck());
     setIsCheckmate(chess.isCheckmate());
     setIsGameOver(chess.isGameOver());
+    setIsDraw(chess.isDraw());
+    setIsStalemate(chess.isStalemate());
+    setIsThreefoldRepetition(chess.isThreefoldRepetition());
+    setIsInsufficientMaterial(chess.isInsufficientMaterial());
 
     // Trigger bot move if it's the bot's turn
     if (!chess.isGameOver() && chess.turn() !== player()) {
@@ -127,6 +135,10 @@ function createChessStore(): ChessStore {
               setIsCheck(chess.isCheck());
               setIsCheckmate(chess.isCheckmate());
               setIsGameOver(chess.isGameOver());
+              setIsDraw(chess.isDraw());
+              setIsStalemate(chess.isStalemate());
+              setIsThreefoldRepetition(chess.isThreefoldRepetition());
+              setIsInsufficientMaterial(chess.isInsufficientMaterial());
               setLastMove({ from: move.from, to: move.to });
               if (result.captured && capturedPieceId) {
                 setCapturedPieces([...capturedPieces(), { id: capturedPieceId, color: result.color === "w" ? "b" : "w", type: result.captured }]);
@@ -235,6 +247,29 @@ function createChessStore(): ChessStore {
     }
   };
 
+  const resetGame = () => {
+    chess.reset();
+    pieceIdCounter = 1;
+    pieceIdMap.clear();
+
+    batch(() => {
+      setGameStarted(false);
+      setCapturedPieces([]);
+      setSelectedSquare(null);
+      setLastMove(null);
+      setValidMoves([]);
+      setBoard(initializeBoardFromChess(chess, generatePieceId, pieceIdMap));
+      setTurn(chess.turn());
+      setIsCheck(false);
+      setIsCheckmate(false);
+      setIsGameOver(false);
+      setIsDraw(false);
+      setIsStalemate(false);
+      setIsThreefoldRepetition(false);
+      setIsInsufficientMaterial(false);
+    });
+  };
+
   return {
     gameStarted,
     onGameStart,
@@ -252,6 +287,11 @@ function createChessStore(): ChessStore {
     isCheck,
     isCheckmate,
     isGameOver,
+    isDraw,
+    isStalemate,
+    isThreefoldRepetition,
+    isInsufficientMaterial,
+    resetGame,
   };
 }
 
@@ -277,4 +317,9 @@ export type ChessStore = {
   isCheck: Accessor<boolean>;
   isCheckmate: Accessor<boolean>;
   isGameOver: Accessor<boolean>;
+  isDraw: Accessor<boolean>;
+  isStalemate: Accessor<boolean>;
+  isThreefoldRepetition: Accessor<boolean>;
+  isInsufficientMaterial: Accessor<boolean>;
+  resetGame: () => void;
 };

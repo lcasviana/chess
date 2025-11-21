@@ -1,15 +1,7 @@
 @import "tailwindcss";
 
-/* View Transitions for chess piece movement */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation-duration: 0.25s;
-  animation-timing-function: ease-in-out;
-}
-
-/* Smooth transitions for all chess pieces */
 ::view-transition-old(*),
 ::view-transition-new(*) {
   animation-duration: 0.25s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-timing-function: ease-in-out;
 }

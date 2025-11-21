@@ -4,6 +4,7 @@ import { ChessProvider } from "~/contexts/ChessContext";
 
 import { ChessBoard } from "./ChessBoard";
 import { ChessCaptured } from "./ChessCaptured";
+import { ChessEnd } from "./ChessEnd";
 import { ChessStart } from "./ChessStart";
 
 export const ChessGame: Component = (): JSX.Element => {
@@ -11,6 +12,7 @@ export const ChessGame: Component = (): JSX.Element => {
     <ChessProvider>
       <div class="relative grid size-full place-content-center place-items-center overflow-auto">
         <ChessStart />
+        <ChessEnd />
         <ChessBoard />
         <ChessCaptured />
       </div>
