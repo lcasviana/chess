@@ -6,7 +6,7 @@ import { batch, createSignal } from "solid-js";
 import { files } from "~/components/ChessCoordinates";
 import type { ChessPieceType } from "~/components/ChessPiece";
 import type { ChessSquareColor } from "~/components/ChessSquare";
-import { createChessBot } from "~/services/chess-bot";
+import { getChessBotWorkerManager } from "~/services/chess-bot-worker-manager";
 
 let storeInstance: ChessStore | null = null;
 
@@ -106,12 +106,12 @@ function createChessStore(): ChessStore {
     }
   };
 
-  const makeComputerMove = () => {
+  const makeComputerMove = async () => {
     if (chess.isGameOver() || chess.turn() === player()) return;
 
     try {
-      const bot = createChessBot(chess);
-      const move = bot.getBestMove();
+      const workerManager = getChessBotWorkerManager();
+      const move = await workerManager.getBestMove(chess.fen());
 
       if (move) {
         // Get the ID of the piece being moved and captured (if any)
