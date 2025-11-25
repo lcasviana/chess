@@ -12,9 +12,9 @@ export const ChessStart: Component = (): JSX.Element => {
   const { gameStarted, player, setPlayer, onGameStart } = useChess();
   return (
     <Show when={!gameStarted()}>
-      <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-xs">
-        <div class="flex flex-col items-center gap-3 rounded-lg bg-stone-800 p-4 pt-3 shadow-sm shadow-stone-600">
-          <h2 class="text-base/normal font-bold text-white">Choose Your Color</h2>
+      <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/25 backdrop-blur-xs">
+        <div class="flex flex-col items-center gap-4 rounded-lg bg-stone-800 p-4 shadow-sm shadow-stone-600">
+          <h2 class="text-base/none font-bold text-white">Choose Your Color</h2>
           <div class="flex gap-3" role="group" aria-label="Color Selection">
             <For each={colors}>
               {(color: Color): JSX.Element => (
@@ -28,7 +28,7 @@ export const ChessStart: Component = (): JSX.Element => {
                   aria-pressed={player() === color}
                   onClick={(): void => setPlayer(color)}
                 >
-                  <div class="size-10">
+                  <div class="aspect-square size-full max-h-[8dvh] max-w-[8dvw]">
                     <ChessPiece piece={colorPiece[color]} selected={falsy} flip={falsy} />
                   </div>
                 </button>
@@ -41,7 +41,7 @@ export const ChessStart: Component = (): JSX.Element => {
               "bg-zinc-300 text-zinc-900 hover:bg-zinc-400": player() === "w",
               "bg-zinc-900 text-zinc-300 hover:bg-zinc-800": player() === "b",
             }}
-            aria-label="Start Game"
+            aria-label={`Start Game As ${colorNames[player()]}`}
             onClick={onGameStart}
           >
             Start Game

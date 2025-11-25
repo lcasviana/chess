@@ -176,10 +176,6 @@ export class ChessBot {
     return ["d4", "d5", "e4", "e5", "c4", "c5", "f4", "f5"].includes(square);
   }
 
-  getPositionEvaluation(color: Color) {
-    return this.evaluator.evaluateDetailed(this.chess, color);
-  }
-
   updateConfig(config: Partial<BotConfig>): void {
     this.config = { ...this.config, ...config };
   }
