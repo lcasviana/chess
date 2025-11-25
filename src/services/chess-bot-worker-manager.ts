@@ -1,72 +1,32 @@
 import type { Move } from "chess.js";
 import type { BotConfig } from "./chess-bot";
-import type { WorkerRequest, WorkerResponse } from "../workers/chess-bot.worker";
 
 export class ChessBotWorkerManager {
   private worker: Worker | null = null;
-  private pendingRequest: {
-    resolve: (move: Move | null) => void;
-    reject: (error: Error) => void;
-  } | null = null;
+  private pending = new Map<number, { resolve: (move: Move | null) => void; reject: (error: Error) => void }>();
+  private nextId = 0;
 
   constructor() {
-    this.initializeWorker();
+    this.initWorker();
   }
 
-  private initializeWorker(): void {
-    try {
-      // Vite/Vinxi will handle the ?worker suffix to properly bundle the worker
-      this.worker = new Worker(new URL("../workers/chess-bot.worker.ts", import.meta.url), {
-        type: "module",
-      });
-
-      this.worker.addEventListener("message", this.handleWorkerMessage.bind(this));
-      this.worker.addEventListener("error", this.handleWorkerError.bind(this));
-    } catch (error) {
-      console.error("[ChessBotWorker] Failed to initialize worker:", error);
-    }
-  }
-
-  private handleWorkerMessage(event: MessageEvent<WorkerResponse>): void {
-    const { type, move, error } = event.data;
-
-    if (type === "bestMove" && this.pendingRequest) {
-      if (error) {
-        this.pendingRequest.reject(new Error(error));
-      } else {
-        this.pendingRequest.resolve(move);
-      }
-      this.pendingRequest = null;
-    }
-  }
-
-  private handleWorkerError(error: ErrorEvent): void {
-    console.error("[ChessBotWorker] Worker error:", error);
-    if (this.pendingRequest) {
-      this.pendingRequest.reject(new Error("Worker encountered an error"));
-      this.pendingRequest = null;
-    }
+  private initWorker(): void {
+    this.worker = new Worker(new URL("../workers/chess-bot.worker.ts", import.meta.url), { type: "module" });
+    this.worker.onmessage = (e: MessageEvent<{ id: number; move: Move | null; error?: string }>) => {
+      const { id, move, error } = e.data;
+      const p = this.pending.get(id);
+      if (!p) return;
+      error ? p.reject(new Error(error)) : p.resolve(move);
+      this.pending.delete(id);
+    };
   }
 
   async getBestMove(fen: string, config?: Partial<BotConfig>): Promise<Move | null> {
-    if (!this.worker) {
-      throw new Error("Worker not initialized");
-    }
-
-    if (this.pendingRequest) {
-      throw new Error("Another request is already in progress");
-    }
-
+    if (!this.worker) throw new Error("Worker not initialized");
+    const id = this.nextId++;
     return new Promise<Move | null>((resolve, reject) => {
-      this.pendingRequest = { resolve, reject };
-
-      const request: WorkerRequest = {
-        type: "getBestMove",
-        fen,
-        config,
-      };
-
-      this.worker!.postMessage(request);
+      this.pending.set(id, { resolve, reject });
+      this.worker!.postMessage({ id, fen, config });
     });
   }
 
@@ -75,25 +35,21 @@ export class ChessBotWorkerManager {
       this.worker.terminate();
       this.worker = null;
     }
-    if (this.pendingRequest) {
-      this.pendingRequest.reject(new Error("Worker terminated"));
-      this.pendingRequest = null;
-    }
+    this.pending.forEach((p) => p.reject(new Error("Worker terminated")));
+    this.pending.clear();
   }
 }
 
-let workerManagerInstance: ChessBotWorkerManager | null = null;
+let instance: ChessBotWorkerManager | null = null;
 
 export function getChessBotWorkerManager(): ChessBotWorkerManager {
-  if (!workerManagerInstance) {
-    workerManagerInstance = new ChessBotWorkerManager();
-  }
-  return workerManagerInstance;
+  if (!instance) instance = new ChessBotWorkerManager();
+  return instance;
 }
 
 export function terminateChessBotWorker(): void {
-  if (workerManagerInstance) {
-    workerManagerInstance.terminate();
-    workerManagerInstance = null;
+  if (instance) {
+    instance.terminate();
+    instance = null;
   }
 }

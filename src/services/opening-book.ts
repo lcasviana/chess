@@ -515,36 +515,22 @@ export const OPENING_BOOK: Readonly<Record<string, OpeningBookEntry>> = Object.f
   },
 });
 
-function getPositionKey(chess: Chess): string {
-  return chess.history().join(",");
-}
-
-function selectWeightedMove(moves: OpeningMove[]): string {
-  const totalWeight = moves.reduce((sum, move) => sum + move.weight, 0);
-  let random = Math.random() * totalWeight;
-
-  for (const move of moves) {
-    random -= move.weight;
-    if (random <= 0) return move.move;
-  }
-  return moves[0].move;
-}
-
 export function getBookMove(chess: Chess): string | null {
-  const entry = OPENING_BOOK[getPositionKey(chess)];
-  return entry?.moves?.length ? selectWeightedMove(entry.moves) : null;
+  const entry = OPENING_BOOK[chess.history().join(",")];
+  if (!entry?.moves?.length) return null;
+  const total = entry.moves.reduce((s, m) => s + m.weight, 0);
+  let r = Math.random() * total;
+  for (const m of entry.moves) {
+    r -= m.weight;
+    if (r <= 0) return m.move;
+  }
+  return entry.moves[0].move;
 }
 
 export function isInBook(chess: Chess): boolean {
-  const entry = OPENING_BOOK[getPositionKey(chess)];
-  return !!entry?.moves;
+  return !!OPENING_BOOK[chess.history().join(",")]?.moves;
 }
 
 export function shouldUseBook(chess: Chess, maxDepth = 10): boolean {
   return chess.history().length < maxDepth && isInBook(chess);
-}
-
-export function getOpeningInfo(chess: Chess): { name: string; variation?: string } | null {
-  const entry = OPENING_BOOK[getPositionKey(chess)];
-  return entry ? { name: entry.name, variation: entry.variation } : null;
 }
