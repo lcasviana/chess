@@ -5,3 +5,9 @@
   animation-duration: 0.25s;
   animation-timing-function: ease-in-out;
 }
+
+:focus-visible {
+  outline: 4px solid var(--color-blue-400);
+  outline-offset: 2px;
+  z-index: 1;
+}

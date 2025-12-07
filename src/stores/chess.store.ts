@@ -57,6 +57,7 @@ function createChessStore(): ChessStore {
   const [player, setPlayer] = createSignal<Color>("w");
   const [capturedPieces, setCapturedPieces] = createSignal<ChessPieceType[]>([]);
   const [selectedSquare, setSelectedSquare] = createSignal<Square | null>(null);
+  const [focusedSquare, setFocusedSquare] = createSignal<Square | null>(null);
   const [lastMove, setLastMove] = createSignal<{ from: Square; to: Square } | null>(null);
   const [validMoves, setValidMoves] = createSignal<Square[]>([]);
   const [board, setBoard] = createSignal<Record<Square, ChessPieceType | null>>(initializeBoardFromChess(chess, generatePieceId, pieceIdMap));
@@ -177,6 +178,9 @@ function createChessStore(): ChessStore {
 
   const onGameStart = () => {
     setGameStarted(true);
+    // Set initial focus based on player color
+    const initialSquare = player() === "w" ? "e2" : "d7";
+    setFocusedSquare(initialSquare as Square);
     // If player chose black, bot (white) makes the first move
     if (player() === "b") {
       setTimeout(() => makeComputerMove(), 500);
@@ -229,6 +233,7 @@ function createChessStore(): ChessStore {
               syncBoardToStore();
               syncGameState();
               setLastMove({ from: currentSelection, to: square });
+              setFocusedSquare(square);
               if (move.captured && capturedPieceId) {
                 setCapturedPieces((prev) => [...prev, { id: capturedPieceId, color: move.color === "w" ? "b" : "w", type: move.captured! }]);
               }
@@ -255,6 +260,7 @@ function createChessStore(): ChessStore {
       setGameStarted(false);
       setCapturedPieces([]);
       setSelectedSquare(null);
+      setFocusedSquare(null);
       setLastMove(null);
       setValidMoves([]);
       setBoard(initializeBoardFromChess(chess, generatePieceId, pieceIdMap));
@@ -277,6 +283,8 @@ function createChessStore(): ChessStore {
     flip,
     board,
     selectedSquare,
+    focusedSquare,
+    setFocusedSquare,
     validMoves,
     lastMove,
     capturedPieces,
@@ -307,6 +315,8 @@ export type ChessStore = {
   flip: Accessor<boolean>;
   board: Accessor<Record<Square, ChessPieceType | null>>;
   selectedSquare: Accessor<Square | null>;
+  focusedSquare: Accessor<Square | null>;
+  setFocusedSquare: (square: Square | null) => void;
   validMoves: Accessor<Square[]>;
   lastMove: Accessor<{ from: Square; to: Square } | null>;
   capturedPieces: Accessor<ChessPieceType[]>;
