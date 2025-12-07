@@ -1,6 +1,7 @@
 import { Chess, type Color, type Move } from "chess.js";
 import { ChessEvaluator } from "./chess-evaluator";
 import * as OpeningBook from "./opening-book";
+import { CENTER_SQUARES, PIECE_VALUES } from "~/utils/constants";
 
 export interface BotConfig {
   searchDepth: number;
@@ -18,8 +19,7 @@ const DEFAULT_CONFIG: BotConfig = {
   evaluationNoise: 0.1,
 };
 
-const CENTER = new Set(["d4", "d5", "e4", "e5", "c4", "c5", "f4", "f5"]);
-const PIECE_VAL: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9 };
+const MAX_CACHE_SIZE = 50000;
 
 export class ChessBot {
   private evaluator: ChessEvaluator;
@@ -32,6 +32,17 @@ export class ChessBot {
   ) {
     this.evaluator = new ChessEvaluator();
     this.config = { ...DEFAULT_CONFIG, ...config };
+  }
+
+  private pruneCache(): void {
+    if (this.tt.size > MAX_CACHE_SIZE) {
+      const entriesToRemove = this.tt.size - Math.floor(MAX_CACHE_SIZE * 0.7);
+      const iterator = this.tt.keys();
+      for (let i = 0; i < entriesToRemove; i++) {
+        const key = iterator.next().value;
+        if (key) this.tt.delete(key);
+      }
+    }
   }
 
   getBestMove(): Move | null {
@@ -87,7 +98,7 @@ export class ChessBot {
       }
 
       this.tt.set(key, { score: maxEval, depth, move: bestMove });
-      if (this.tt.size > 50000) this.tt.clear();
+      this.pruneCache();
       return { move: bestMove, score: maxEval };
     } else {
       let minEval = Infinity;
@@ -106,17 +117,14 @@ export class ChessBot {
       }
 
       this.tt.set(key, { score: minEval, depth, move: bestMove });
-      if (this.tt.size > 50000) this.tt.clear();
+      this.pruneCache();
       return { move: bestMove, score: minEval };
     }
   }
 
   private orderMoves(moves: Move[]): void {
-    moves.sort((a, b) => {
-      const sa = (a.captured ? PIECE_VAL[a.captured] * 10 - PIECE_VAL[a.piece] : 0) + (CENTER.has(a.to) ? 2 : 0);
-      const sb = (b.captured ? PIECE_VAL[b.captured] * 10 - PIECE_VAL[b.piece] : 0) + (CENTER.has(b.to) ? 2 : 0);
-      return sb - sa;
-    });
+    const getScore = (m: Move) => (m.captured ? PIECE_VALUES[m.captured] * 10 - PIECE_VALUES[m.piece] : 0) + (CENTER_SQUARES.has(m.to) ? 2 : 0);
+    moves.sort((a, b) => getScore(b) - getScore(a));
   }
 
   updateConfig(config: Partial<BotConfig>): void {

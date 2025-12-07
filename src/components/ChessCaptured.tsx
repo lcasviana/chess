@@ -1,9 +1,8 @@
-import type { PieceSymbol } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { createMemo, For, Show } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
-import { falsy } from "~/utils/constants";
+import { falsy, PIECE_VALUES } from "~/utils/constants";
 
 import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";
@@ -61,12 +60,10 @@ const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = ({ pieces }: Ch
   );
 };
 
-const pieceValues: Readonly<Record<PieceSymbol, number>> = Object.freeze({ q: 9, r: 5, b: 3, n: 3, p: 1, k: 0 });
-
 function calculatePoints(pieces: ChessPieceType[]): number {
-  return pieces.reduce((sum: number, piece: ChessPieceType): number => sum + pieceValues[piece.type], 0);
+  return pieces.reduce((sum: number, piece: ChessPieceType): number => sum + PIECE_VALUES[piece.type], 0);
 }
 
 function sortPieces(pieces: ChessPieceType[]): ChessPieceType[] {
-  return Array.from(pieces).sort((a: ChessPieceType, b: ChessPieceType): number => pieceValues[b.type] - pieceValues[a.type]);
+  return Array.from(pieces).sort((a: ChessPieceType, b: ChessPieceType): number => PIECE_VALUES[b.type] - PIECE_VALUES[a.type]);
 }

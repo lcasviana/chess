@@ -30,16 +30,28 @@ function initializeBoardFromChess(chess: Chess, generateId: () => string, idMap:
   return boardState as Record<Square, ChessPieceType | null>;
 }
 
+function getRookSquaresForCastling(move: { flags: string; color: Color; to: Square }): { from: Square; to: Square } | null {
+  const isKingside = move.flags.includes("k");
+  const isQueenside = move.flags.includes("q");
+
+  if (!isKingside && !isQueenside) return null;
+
+  const rank = move.color === "w" ? "1" : "8";
+
+  if (isKingside) {
+    return { from: `h${rank}` as Square, to: `f${rank}` as Square };
+  } else {
+    return { from: `a${rank}` as Square, to: `d${rank}` as Square };
+  }
+}
+
 function createChessStore(): ChessStore {
   const chess = new Chess();
 
-  // Piece ID management for view transitions
   let pieceIdCounter = 1;
-  const pieceIdMap = new Map<Square, string>(); // Tracks which piece ID is on which square
+  const pieceIdMap = new Map<Square, string>();
 
-  const generatePieceId = (): string => {
-    return `p${pieceIdCounter++}`;
-  };
+  const generatePieceId = (): string => `p${pieceIdCounter++}`;
 
   const [gameStarted, setGameStarted] = createSignal<boolean>(false);
   const [player, setPlayer] = createSignal<Color>("w");
@@ -57,20 +69,55 @@ function createChessStore(): ChessStore {
   const [isThreefoldRepetition, setIsThreefoldRepetition] = createSignal<boolean>(chess.isThreefoldRepetition());
   const [isInsufficientMaterial, setIsInsufficientMaterial] = createSignal<boolean>(chess.isInsufficientMaterial());
 
+  const withViewTransition = (callback: () => void) => {
+    if (document.startViewTransition) {
+      document.startViewTransition(callback);
+    } else {
+      callback();
+    }
+  };
+
+  const updateGameStateSignals = () => {
+    setTurn(chess.turn());
+    setIsCheck(chess.isCheck());
+    setIsCheckmate(chess.isCheckmate());
+    setIsGameOver(chess.isGameOver());
+    setIsDraw(chess.isDraw());
+    setIsStalemate(chess.isStalemate());
+    setIsThreefoldRepetition(chess.isThreefoldRepetition());
+    setIsInsufficientMaterial(chess.isInsufficientMaterial());
+  };
+
+  const updatePiecePositions = (from: Square, to: Square, move: { flags: string; color: Color; to: Square }) => {
+    const movingPieceId = pieceIdMap.get(from);
+    if (movingPieceId) {
+      pieceIdMap.delete(from);
+      pieceIdMap.set(to, movingPieceId);
+    }
+
+    const rookSquares = getRookSquaresForCastling(move);
+    if (rookSquares) {
+      const rookId = pieceIdMap.get(rookSquares.from);
+      if (rookId) {
+        pieceIdMap.delete(rookSquares.from);
+        pieceIdMap.set(rookSquares.to, rookId);
+      }
+    }
+  };
+
   const syncBoardToStore = () => {
     const chessBoard = chess.board();
-
     const _board = {} as Record<Square, ChessPieceType | null>;
     const currentSquares = new Set<Square>();
 
     chessBoard.forEach((row, rankIndex) => {
       row.forEach((piece, fileIndex) => {
         const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
-        currentSquares.add(square);
         if (piece) {
-          // Preserve existing ID from the map, or generate new one for promotions
-          const id = pieceIdMap.get(square) || generatePieceId();
-          if (!pieceIdMap.has(square)) {
+          currentSquares.add(square);
+          let id = pieceIdMap.get(square);
+          if (!id) {
+            id = generatePieceId();
             pieceIdMap.set(square, id);
           }
           _board[square] = { ...piece, id };
@@ -80,9 +127,8 @@ function createChessStore(): ChessStore {
       });
     });
 
-    // Clean up IDs for squares that no longer have pieces
     for (const [square] of pieceIdMap) {
-      if (!currentSquares.has(square) || _board[square] === null) {
+      if (!currentSquares.has(square)) {
         pieceIdMap.delete(square);
       }
     }
@@ -91,16 +137,7 @@ function createChessStore(): ChessStore {
   };
 
   const syncGameState = () => {
-    setTurn(chess.turn());
-    setIsCheck(chess.isCheck());
-    setIsCheckmate(chess.isCheckmate());
-    setIsGameOver(chess.isGameOver());
-    setIsDraw(chess.isDraw());
-    setIsStalemate(chess.isStalemate());
-    setIsThreefoldRepetition(chess.isThreefoldRepetition());
-    setIsInsufficientMaterial(chess.isInsufficientMaterial());
-
-    // Trigger bot move if it's the bot's turn
+    updateGameStateSignals();
     if (!chess.isGameOver() && chess.turn() !== player()) {
       setTimeout(() => makeComputerMove(), 500);
     }
@@ -114,44 +151,21 @@ function createChessStore(): ChessStore {
       const move = await workerManager.getBestMove(chess.fen());
 
       if (move) {
-        // Get the ID of the piece being moved and captured (if any)
-        const movingPieceId = pieceIdMap.get(move.from as Square);
         const capturedPieceId = pieceIdMap.get(move.to as Square);
-
         const result = chess.move(move);
 
         if (result) {
-          const performUpdate = () => {
+          withViewTransition(() => {
             batch(() => {
-              // Update piece ID mappings: move piece from source to destination
-              if (movingPieceId) {
-                pieceIdMap.delete(move.from as Square);
-                pieceIdMap.set(move.to as Square, movingPieceId);
-              }
-
+              updatePiecePositions(move.from as Square, move.to as Square, result);
               syncBoardToStore();
-              // Update game state without triggering another bot move
-              setTurn(chess.turn());
-              setIsCheck(chess.isCheck());
-              setIsCheckmate(chess.isCheckmate());
-              setIsGameOver(chess.isGameOver());
-              setIsDraw(chess.isDraw());
-              setIsStalemate(chess.isStalemate());
-              setIsThreefoldRepetition(chess.isThreefoldRepetition());
-              setIsInsufficientMaterial(chess.isInsufficientMaterial());
+              updateGameStateSignals();
               setLastMove({ from: move.from, to: move.to });
               if (result.captured && capturedPieceId) {
                 setCapturedPieces([...capturedPieces(), { id: capturedPieceId, color: result.color === "w" ? "b" : "w", type: result.captured }]);
               }
             });
-          };
-
-          // Wrap entire update in view transition for smooth animations
-          if (document.startViewTransition) {
-            document.startViewTransition(performUpdate);
-          } else {
-            performUpdate();
-          }
+          });
         }
       }
     } catch (error) {
@@ -200,9 +214,6 @@ function createChessStore(): ChessStore {
       try {
         const piece = board()[currentSelection];
         const isPawnPromotion = piece?.type === "p" && ((piece.color === "w" && square[1] === "8") || (piece.color === "b" && square[1] === "1"));
-
-        // Get the ID of the piece being moved and captured (if any)
-        const movingPieceId = pieceIdMap.get(currentSelection);
         const capturedPieceId = pieceIdMap.get(square);
 
         const move = chess.move({
@@ -212,14 +223,9 @@ function createChessStore(): ChessStore {
         });
 
         if (move) {
-          const performUpdate = () => {
+          withViewTransition(() => {
             batch(() => {
-              // Update piece ID mappings: move piece from source to destination
-              if (movingPieceId) {
-                pieceIdMap.delete(currentSelection);
-                pieceIdMap.set(square, movingPieceId);
-              }
-
+              updatePiecePositions(currentSelection, square, move);
               syncBoardToStore();
               syncGameState();
               setLastMove({ from: currentSelection, to: square });
@@ -229,14 +235,7 @@ function createChessStore(): ChessStore {
               setSelectedSquare(null);
               setValidMoves([]);
             });
-          };
-
-          // Wrap entire update in view transition for smooth animations
-          if (document.startViewTransition) {
-            document.startViewTransition(performUpdate);
-          } else {
-            performUpdate();
-          }
+          });
         }
       } catch (error) {
         console.error(error);

@@ -43,6 +43,7 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
         "cursor-pointer": isValidMove() || piece()?.color === player(),
       }}
       aria-label={`Square ${square.toUpperCase()}`}
+      onKeyPress={(event: KeyboardEvent) => onSquarePress(event, square)}
       onClick={() => onSquareClick(square)}
     >
       <Show when={piece()}>
@@ -61,3 +62,5 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
     </div>
   );
 };
+
+function onSquarePress(event: KeyboardEvent, square: Square) {}

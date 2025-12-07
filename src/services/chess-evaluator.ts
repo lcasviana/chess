@@ -1,13 +1,5 @@
 import type { Chess, Color, PieceSymbol } from "chess.js";
-
-const PIECE_VALUES: Record<PieceSymbol, number> = {
-  p: 1,
-  n: 3,
-  b: 3,
-  r: 5,
-  q: 9,
-  k: 0,
-};
+import { PIECE_VALUES } from "~/utils/constants";
 
 const scale = (tables: number[][][]) => tables.map((t) => t.map((r) => r.map((v) => v / 100)));
 
@@ -93,15 +85,28 @@ const WEIGHTS = [
   { mat: 1.0, pos: 0.4, ks: 0.1, pwn: 0.3, dev: 0.0 },
 ];
 
+const MAX_CACHE_SIZE = 50000;
+
 export class ChessEvaluator {
   private cache = new Map<string, number>();
 
-  evaluate(chess: Chess, color: Color): number {
-    if (chess.isCheckmate()) return chess.turn() === color ? -1000 : 1000;
-    if (chess.isDraw() || chess.isStalemate() || chess.isThreefoldRepetition()) return 0;
+  private pruneCache(): void {
+    if (this.cache.size > MAX_CACHE_SIZE) {
+      const entriesToRemove = this.cache.size - Math.floor(MAX_CACHE_SIZE * 0.7);
+      const iterator = this.cache.keys();
+      for (let i = 0; i < entriesToRemove; i++) {
+        const key = iterator.next().value;
+        if (key) this.cache.delete(key);
+      }
+    }
+  }
 
+  evaluate(chess: Chess, color: Color): number {
     const fen = chess.fen();
     if (this.cache.has(fen)) return this.cache.get(fen)!;
+
+    if (chess.isCheckmate()) return chess.turn() === color ? -1000 : 1000;
+    if (chess.isDraw() || chess.isStalemate() || chess.isThreefoldRepetition()) return 0;
 
     const board = chess.board();
     const white = color === "w";
@@ -167,7 +172,7 @@ export class ChessEvaluator {
 
     const score = mat * w.mat + pos * w.pos + ks * w.ks + pwn * w.pwn + dev * w.dev;
     this.cache.set(fen, score);
-    if (this.cache.size > 10000) this.cache.clear();
+    this.pruneCache();
     return score;
   }
 }
