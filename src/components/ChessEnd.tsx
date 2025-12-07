@@ -1,39 +1,43 @@
 import type { Color } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
-import { Show } from "solid-js";
+import { createMemo, Show } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
 
 import type { ChessPieceType } from "./ChessPiece";
-import { ChessPiece, colorNames } from "./ChessPiece";
+import { blackKing, ChessPiece, colorNames, whiteKing } from "./ChessPiece";
 
-type GameResult = "win" | "lose" | "draw" | "stalemate";
+type GameResultWithWinner = {
+  type: "win" | "lose" | "draw" | "stalemate";
+  player: Color | null;
+};
 
 export const ChessEnd: Component = (): JSX.Element => {
   const { isGameOver, isCheckmate, isDraw, isStalemate, isThreefoldRepetition, isInsufficientMaterial, turn, player, resetGame } = useChess();
 
-  const getGameResult = (): GameResult => {
+  const result = createMemo<GameResultWithWinner>(() => {
     if (isCheckmate()) {
-      // If it's checkmate, the current turn is the loser (they can't move)
-      return turn() === player() ? "lose" : "win";
+      const isPlayerWin = turn() !== player();
+      return {
+        type: isPlayerWin ? "win" : "lose",
+        player: isPlayerWin ? player() : turn(),
+      };
     }
     if (isStalemate()) {
-      return "stalemate";
+      return { type: "stalemate", player: null };
     }
     if (isDraw() || isThreefoldRepetition() || isInsufficientMaterial()) {
-      return "draw";
+      return { type: "draw", player: null };
     }
-    return "draw"; // fallback
-  };
+    return { type: "draw", player: null };
+  });
 
-  const getResultMessage = (): string => {
-    const result = getGameResult();
-    switch (result) {
+  const resultMessage = createMemo(() => {
+    switch (result().type) {
       case "win":
-        return `Checkmate! ${colorNames[player()]} Wins!`;
       case "lose":
-        return `Checkmate! ${colorNames[turn()]} Wins!`;
+        return `Checkmate! ${colorNames[result().player!]} Wins!`;
       case "stalemate":
         return "Stalemate!";
       case "draw":
@@ -41,27 +45,26 @@ export const ChessEnd: Component = (): JSX.Element => {
         if (isInsufficientMaterial()) return "Draw by Insufficient Material!";
         return "Draw!";
     }
-  };
+  });
 
-  const getResultPiece = (): Accessor<ChessPieceType> => {
-    const result = getGameResult();
-    if (result === "win") {
-      return () => ({ id: "", color: player(), type: "k" });
+  const resultPlayer = createMemo<Accessor<ChessPieceType>>(() => {
+    switch (result().player) {
+      case "w":
+        return whiteKing;
+      case "b":
+        return blackKing;
+      default:
+        return player() === "w" ? whiteKing : blackKing;
     }
-    if (result === "lose") {
-      return () => ({ id: "", color: turn(), type: "k" });
-    }
-    // For draw/stalemate, show the player's king
-    return () => ({ id: "", color: player(), type: "k" });
-  };
+  });
 
   return (
     <Show when={isGameOver()}>
       <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/50 backdrop-blur-xs">
         <div class="flex flex-col items-center gap-3 rounded-lg bg-stone-800 p-4 pt-3 shadow-sm shadow-stone-600">
-          <h2 class="text-base/normal font-bold text-white">{getResultMessage()}</h2>
+          <h2 class="text-base/normal font-bold text-white">{resultMessage()}</h2>
           <div class="size-16">
-            <ChessPiece piece={getResultPiece()} selected={falsy} flip={falsy} />
+            <ChessPiece piece={resultPlayer()} selected={falsy} flip={falsy} />
           </div>
           <button
             class="mt-1 cursor-pointer rounded-lg px-3 py-1 text-base font-bold transition-all"

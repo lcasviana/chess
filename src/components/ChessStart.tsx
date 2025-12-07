@@ -6,7 +6,7 @@ import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
 
 import type { ChessPieceType } from "./ChessPiece";
-import { ChessPiece, colorNames, colors } from "./ChessPiece";
+import { blackKing, ChessPiece, colorNames, colors, whiteKing } from "./ChessPiece";
 
 export const ChessStart: Component = (): JSX.Element => {
   const { gameStarted, player, setPlayer, onGameStart } = useChess();
@@ -52,6 +52,4 @@ export const ChessStart: Component = (): JSX.Element => {
   );
 };
 
-const whiteKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "", color: "w", type: "k" });
-const blackKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "", color: "b", type: "k" });
 const colorPiece: Readonly<Record<Color, Accessor<ChessPieceType>>> = Object.freeze({ w: whiteKing, b: blackKing });

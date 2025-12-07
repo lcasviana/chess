@@ -48,3 +48,6 @@ export const pieceNames: Readonly<Record<PieceSymbol, string>> = Object.freeze({
   q: "Queen",
   k: "King",
 });
+
+export const whiteKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "white-king", color: "w", type: "k" });
+export const blackKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "black-king", color: "b", type: "k" });
