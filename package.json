@@ -1,29 +1,17 @@
 {
   "name": "chess",
-  "type": "module",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start",
-    "prepare": "husky",
-    "postinstall": "bun run prettier:write",
-    "prettier:check": "prettier -c --log-level=warn .",
-    "prettier:write": "prettier -lw --log-level=warn ."
-  },
-  "dependencies": {
-    "@solidjs/router": "^0.15.4",
-    "@solidjs/start": "^1.2.0",
-    "chess.js": "^1.4.0",
-    "solid-js": "^1.9.10",
-    "vinxi": "^0.5.8"
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.17",
     "husky": "^9.1.7",
-    "prettier": "^3.7.4",
+    "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.1.18"
   },
   "engines": {
     "node": ">=22"

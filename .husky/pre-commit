@@ -1,1 +1,1 @@
-bun run prettier:check
+bun --filter '*' prettier:check
