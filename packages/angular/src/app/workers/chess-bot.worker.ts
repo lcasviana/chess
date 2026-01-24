@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { Chess } from "chess.js";
-import { createChessBot, type BotConfig } from "../services/chess-bot";
+import { createChessBot, type BotConfig } from "@chess/shared";
 
 addEventListener("message", (e: MessageEvent<{ id: number; fen: string; config?: Partial<BotConfig> }>) => {
   const { id, fen, config } = e.data;

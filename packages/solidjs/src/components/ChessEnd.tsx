@@ -2,10 +2,9 @@ import type { Color } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { createMemo, Show } from "solid-js";
 
+import type { ChessPieceType } from "@chess/shared";
 import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
-
-import type { ChessPieceType } from "./ChessPiece";
 import { blackKing, ChessPiece, colorNames, whiteKing } from "./ChessPiece";
 
 type GameResultWithWinner = {

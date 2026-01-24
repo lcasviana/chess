@@ -1,8 +1,7 @@
 import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, input, ViewEncapsulation } from "@angular/core";
 
-import type { ChessPieceType } from "../chess.types";
-import { COLOR_NAMES, PIECE_NAMES } from "../chess.types";
+import { COLOR_NAMES, PIECE_NAMES, type ChessPieceType } from "@chess/shared";
 
 @Component({
   selector: "chess-piece",

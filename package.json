@@ -2,7 +2,9 @@
   "name": "chess",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/shared",
+    "packages/angular",
+    "packages/solidjs"
   ],
   "scripts": {
     "prepare": "husky",

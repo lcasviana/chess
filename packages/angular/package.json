@@ -12,6 +12,7 @@
     "prettier:write": "prettier -lw --log-level=warn ."
   },
   "dependencies": {
+    "@chess/shared": "*",
     "@angular/common": "^21.1.0",
     "@angular/compiler": "^21.1.0",
     "@angular/core": "^21.1.0",

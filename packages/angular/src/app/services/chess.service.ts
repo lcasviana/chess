@@ -2,8 +2,7 @@ import { Injectable, computed, signal } from "@angular/core";
 import type { Color, Square } from "chess.js";
 import { Chess } from "chess.js";
 
-import type { ChessPieceType, ChessSquareColor, LastMove } from "../chess.types";
-import { FILES } from "../chess.types";
+import { FILES, type ChessPieceType, type ChessSquareColor, type LastMove } from "@chess/shared";
 import { ChessBotWorkerManager } from "./chess-bot-worker-manager";
 
 @Injectable({ providedIn: "root" })

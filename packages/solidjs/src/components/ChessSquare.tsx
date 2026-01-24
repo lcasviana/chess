@@ -2,14 +2,12 @@ import type { Square } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 import { createEffect, Show } from "solid-js";
 
+import { getAdjacentSquare, type ChessPieceType } from "@chess/shared";
 import { useChess } from "~/contexts/ChessContext";
-import { getAdjacentSquare } from "~/utils/keyboard-navigation";
-
-import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";
 
-export type ChessSquareColor = "light" | "dark" | null;
-export type ChessSquareInCheck = "check" | "checkmate" | null;
+import type { ChessSquareColor, ChessSquareInCheck } from "@chess/shared";
+export type { ChessSquareColor, ChessSquareInCheck };
 
 export type ChessSquareProps = {
   square: Square;

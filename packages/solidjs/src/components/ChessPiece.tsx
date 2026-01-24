@@ -1,11 +1,10 @@
-import type { Color, PieceSymbol } from "chess.js";
+import type { Color } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
 
-export type ChessPieceType = {
-  id: string;
-  color: Color;
-  type: PieceSymbol;
-};
+import { COLOR_NAMES, PIECE_NAMES, type ChessPieceType } from "@chess/shared";
+
+export type { ChessPieceType };
+export { COLOR_NAMES as colorNames } from "@chess/shared";
 
 export type ChessPieceProps = {
   piece: Accessor<ChessPieceType>;
@@ -25,7 +24,7 @@ export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected, flip }
         "scale-125": selected(),
         "rotate-180": flip(),
       }}
-      aria-label={`${colorNames[piece().color]} ${pieceNames[piece().type]}`}
+      aria-label={`${COLOR_NAMES[piece().color]} ${PIECE_NAMES[piece().type]}`}
       role="img"
     >
       <use href={`./chess.svg#${piece().type}`} />
@@ -34,20 +33,6 @@ export const ChessPiece: Component<ChessPieceProps> = ({ piece, selected, flip }
 };
 
 export const colors: Readonly<Color[]> = Object.freeze(["w", "b"]);
-
-export const colorNames: Readonly<Record<Color, string>> = Object.freeze({
-  w: "White",
-  b: "Black",
-});
-
-export const pieceNames: Readonly<Record<PieceSymbol, string>> = Object.freeze({
-  p: "Pawn",
-  n: "Knight",
-  b: "Bishop",
-  r: "Rook",
-  q: "Queen",
-  k: "King",
-});
 
 export const whiteKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "white-king", color: "w", type: "k" });
 export const blackKing: Accessor<ChessPieceType> = (): ChessPieceType => ({ id: "black-king", color: "b", type: "k" });

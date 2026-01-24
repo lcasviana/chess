@@ -3,9 +3,7 @@ import { Chess } from "chess.js";
 import type { Accessor } from "solid-js";
 import { batch, createSignal } from "solid-js";
 
-import { files } from "~/components/ChessCoordinates";
-import type { ChessPieceType } from "~/components/ChessPiece";
-import type { ChessSquareColor } from "~/components/ChessSquare";
+import { FILES, type ChessPieceType, type ChessSquareColor } from "@chess/shared";
 import { getChessBotWorkerManager } from "~/services/chess-bot-worker-manager";
 
 let storeInstance: ChessStore | null = null;
@@ -16,7 +14,7 @@ function initializeBoardFromChess(chess: Chess, generateId: () => string, idMap:
 
   chessBoard.forEach((row, rankIndex) => {
     row.forEach((piece, fileIndex) => {
-      const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
+      const square = `${FILES[fileIndex]}${8 - rankIndex}` as Square;
       if (piece) {
         const id = generateId();
         idMap.set(square, id);
@@ -113,7 +111,7 @@ function createChessStore(): ChessStore {
 
     chessBoard.forEach((row, rankIndex) => {
       row.forEach((piece, fileIndex) => {
-        const square = `${files[fileIndex]}${8 - rankIndex}` as Square;
+        const square = `${FILES[fileIndex]}${8 - rankIndex}` as Square;
         if (piece) {
           currentSquares.add(square);
           let id = pieceIdMap.get(square);

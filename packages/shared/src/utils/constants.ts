@@ -1,25 +1,5 @@
 import type { Color, PieceSymbol, Square } from "chess.js";
 
-export type ChessPieceType = {
-  id: string;
-  color: Color;
-  type: PieceSymbol;
-};
-
-export type ChessSquareColor = "light" | "dark" | null;
-
-export type ChessSquareInCheck = "check" | "checkmate" | null;
-
-export type GameResult = {
-  type: "win" | "lose" | "draw" | "stalemate";
-  player: Color | null;
-};
-
-export type LastMove = {
-  from: Square;
-  to: Square;
-};
-
 export const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"] as const;
 export const RANKS = ["1", "2", "3", "4", "5", "6", "7", "8"] as const;
 
@@ -45,3 +25,5 @@ export const PIECE_VALUES: Readonly<Record<PieceSymbol, number>> = Object.freeze
   q: 9,
   k: 0,
 });
+
+export const CENTER_SQUARES = new Set<Square>(["e4", "d4", "e5", "d5"]);

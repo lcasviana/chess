@@ -1,8 +1,7 @@
 import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, computed, inject, ViewEncapsulation } from "@angular/core";
 
-import type { ChessPieceType, GameResult } from "../chess.types";
-import { COLOR_NAMES } from "../chess.types";
+import { COLOR_NAMES, type ChessPieceType, type GameResult } from "@chess/shared";
 import { ChessService } from "../services/chess.service";
 import { ChessPieceComponent } from "./chess-piece.component";
 

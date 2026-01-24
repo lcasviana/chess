@@ -1,5 +1,5 @@
 import type { Move } from "chess.js";
-import type { BotConfig } from "./chess-bot";
+import type { BotConfig } from "@chess/shared";
 
 export class ChessBotWorkerManager {
   private worker: Worker | null = null;

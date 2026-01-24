@@ -1,5 +1,5 @@
 import { Chess } from "chess.js";
-import { createChessBot, type BotConfig } from "../services/chess-bot";
+import { createChessBot, type BotConfig } from "@chess/shared";
 
 self.onmessage = (e: MessageEvent<{ id: number; fen: string; config?: Partial<BotConfig> }>) => {
   const { id, fen, config } = e.data;

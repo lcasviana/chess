@@ -2,9 +2,8 @@ import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, viewChild, ViewEncapsulation } from "@angular/core";
 import type { Square } from "chess.js";
 
-import type { ChessSquareColor, ChessSquareInCheck } from "../chess.types";
+import { getAdjacentSquare, type ChessSquareColor, type ChessSquareInCheck } from "@chess/shared";
 import { ChessService } from "../services/chess.service";
-import { getAdjacentSquare } from "../utils/keyboard-navigation";
 import { ChessPieceComponent } from "./chess-piece.component";
 
 @Component({

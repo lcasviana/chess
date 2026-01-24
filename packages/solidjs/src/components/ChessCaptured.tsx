@@ -1,10 +1,9 @@
 import type { Accessor, Component, JSX } from "solid-js";
 import { createMemo, For, Show } from "solid-js";
 
+import { PIECE_VALUES, type ChessPieceType } from "@chess/shared";
 import { useChess } from "~/contexts/ChessContext";
-import { falsy, PIECE_VALUES } from "~/utils/constants";
-
-import type { ChessPieceType } from "./ChessPiece";
+import { falsy } from "~/utils/constants";
 import { ChessPiece } from "./ChessPiece";
 
 export const ChessCaptured: Component = (): JSX.Element => {

@@ -1,6 +1,8 @@
 import type { Accessor, Component, JSX } from "solid-js";
 import { For } from "solid-js";
 
+import { FILES } from "@chess/shared";
+
 export type ChessCoordinatesType = "files" | "ranks";
 
 export type ChessCoordinatesProps = {
@@ -33,6 +35,6 @@ export const ChessCoordinates: Component<ChessCoordinatesProps> = ({ type, gridA
   );
 };
 
-export const files: Readonly<string[]> = Object.freeze(["a", "b", "c", "d", "e", "f", "g", "h"]);
+export const files: Readonly<string[]> = FILES;
 export const ranks: Readonly<number[]> = Object.freeze([8, 7, 6, 5, 4, 3, 2, 1]);
 export const coordinates: Readonly<Record<ChessCoordinatesType, Readonly<(number | string)[]>>> = Object.freeze({ files, ranks });
