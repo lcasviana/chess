@@ -1,16 +1,16 @@
 {
   "name": "@chess/angular",
-  "version": "0.0.0",
+  "private": true,
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:@chess/angular": "node dist/@chess/angular/server/server.mjs"
+    "serve:ssr:@chess/angular": "node dist/@chess/angular/server/server.mjs",
+    "prettier:check": "prettier -c --log-level=warn .",
+    "prettier:write": "prettier -lw --log-level=warn ."
   },
-  "private": true,
-  "packageManager": "npm@11.7.0",
   "dependencies": {
     "@angular/common": "^21.1.0",
     "@angular/compiler": "^21.1.0",

@@ -6,7 +6,6 @@
     "dev": "vinxi dev",
     "build": "vinxi build",
     "start": "vinxi start",
-    "postinstall": "bun run prettier:write",
     "prettier:check": "prettier -c --log-level=warn .",
     "prettier:write": "prettier -lw --log-level=warn ."
   },

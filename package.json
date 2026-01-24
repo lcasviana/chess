@@ -5,7 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "bun --filter '*' prettier:write"
   },
   "devDependencies": {
     "husky": "^9.1.7",
