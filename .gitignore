@@ -1,12 +1,9 @@
-# System
 .DS_Store
 Thumbs.db
-
-# Dependencies
 node_modules/
-
-# Build
 .angular/
 dist/
 .output/
 .vinxi/
+.vscode/
+.claude/
