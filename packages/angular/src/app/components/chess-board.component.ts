@@ -1,6 +1,7 @@
-import { NgClass } from "@angular/common";
-import { ChangeDetectionStrategy, Component, effect, inject, signal, ViewEncapsulation } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, ViewEncapsulation } from "@angular/core";
 import { SQUARES, type Square } from "chess.js";
+
+import { PIECE_NAMES } from "@chess/shared";
 
 import { ChessService } from "../services/chess.service";
 import { ChessCoordinatesComponent } from "./chess-coordinates.component";
@@ -13,11 +14,7 @@ import { ChessSquareComponent } from "./chess-square.component";
       <div role="status" aria-live="polite" aria-atomic="true" class="sr-only">
         {{ announcement() }}
       </div>
-      <div
-        style="grid-template: auto repeat(8, 1fr) auto / auto repeat(8, 1fr) auto"
-        class="grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto"
-        [ngClass]="{ 'rotate-180': chess.flip() }"
-      >
+      <div style="grid-template: auto repeat(8, 1fr) auto / auto repeat(8, 1fr) auto" [class]="boardClassName()">
         <chess-coordinates aria-label="Top File Letters" type="files" [flip]="chess.flip()" gridArea="1 / 2 / 2 / 10" />
         <chess-coordinates aria-label="Left Rank Numbers" type="ranks" [flip]="chess.flip()" gridArea="2 / 1 / 10 / 2" />
         <div
@@ -40,38 +37,34 @@ import { ChessSquareComponent } from "./chess-square.component";
   host: { class: "contents" },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, ChessCoordinatesComponent, ChessSquareComponent],
+  imports: [ChessCoordinatesComponent, ChessSquareComponent],
 })
 export class ChessBoardComponent {
-  protected chess = inject(ChessService);
-  protected squares: Square[] = [...SQUARES];
-  protected announcement = signal("");
+  protected readonly chess = inject(ChessService);
+  protected readonly squares: readonly Square[] = SQUARES;
 
-  private pieceNames: Record<string, string> = {
-    p: "Pawn",
-    n: "Knight",
-    b: "Bishop",
-    r: "Rook",
-    q: "Queen",
-    k: "King",
-  };
+  protected readonly announcement = signal("");
 
-  constructor() {
-    effect(() => {
-      const move = this.chess.lastMove();
-      if (!move) return;
+  protected readonly boardClassName = computed(() =>
+    this.chess.flip()
+      ? "grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto rotate-180"
+      : "grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto",
+  );
 
-      const piece = this.chess.board()[move.to];
-      if (!piece) return;
+  private readonly announcementEffect = effect(() => {
+    const move = this.chess.lastMove();
+    if (!move) return;
 
-      const colorName = this.chess.turn() === "w" ? "Black" : "White";
-      const pieceName = this.pieceNames[piece.type];
+    const piece = this.chess.board()[move.to];
+    if (!piece) return;
 
-      let text = `${colorName} ${pieceName} from ${move.from.toUpperCase()} to ${move.to.toUpperCase()}`;
-      if (this.chess.isCheckmate()) text += ". Checkmate!";
-      else if (this.chess.isCheck()) text += ". Check!";
+    const colorName = this.chess.turn() === "w" ? "Black" : "White";
+    const pieceName = PIECE_NAMES[piece.type];
 
-      this.announcement.set(text);
-    });
-  }
+    let text = `${colorName} ${pieceName} from ${move.from.toUpperCase()} to ${move.to.toUpperCase()}`;
+    if (this.chess.isCheckmate()) text += ". Checkmate!";
+    else if (this.chess.isCheck()) text += ". Check!";
+
+    this.announcement.set(text);
+  });
 }

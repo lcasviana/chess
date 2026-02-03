@@ -1,14 +1,14 @@
-import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, computed, inject, ViewEncapsulation } from "@angular/core";
 
 import { PIECE_VALUES, type ChessPieceType } from "@chess/shared";
+
 import { ChessService } from "../services/chess.service";
 import { ChessPieceComponent } from "./chess-piece.component";
 
 @Component({
   selector: "chess-captured",
   template: `
-    <div class="flex h-6 w-full items-center justify-between gap-1 overflow-auto px-1" [ngClass]="{ '-scale-x-100': chess.flip() }">
+    <div [class]="containerClassName()">
       <div class="flex flex-wrap items-center">
         @for (piece of whiteCaptured(); track piece.id) {
           <div class="size-5">
@@ -16,18 +16,9 @@ import { ChessPieceComponent } from "./chess-piece.component";
           </div>
         }
       </div>
-      <div class="grow" [ngClass]="{ 'text-left': points() > 0, 'text-right': points() < 0 }">
+      <div [class]="pointsContainerClassName()">
         @if (points() !== 0) {
-          <span
-            class="inline-block text-base font-semibold"
-            [ngClass]="{
-              'text-green-800': chess.player() === 'w' ? points() > 0 : points() < 0,
-              'text-red-800': chess.player() === 'w' ? points() < 0 : points() > 0,
-              '-scale-x-100': chess.flip(),
-            }"
-          >
-            +{{ absPoints() }}
-          </span>
+          <span [class]="pointsTextClassName()">+{{ absPoints() }}</span>
         }
       </div>
       <div class="flex flex-wrap items-center">
@@ -42,19 +33,42 @@ import { ChessPieceComponent } from "./chess-piece.component";
   host: { class: "contents" },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, ChessPieceComponent],
+  imports: [ChessPieceComponent],
 })
 export class ChessCapturedComponent {
-  protected chess = inject(ChessService);
+  protected readonly chess = inject(ChessService);
 
-  whiteCaptured = computed(() => this.sortPieces(this.chess.capturedPieces().filter((p) => p.color === "b")));
+  protected readonly whiteCaptured = computed((): ChessPieceType[] => this.sortPieces(this.chess.capturedPieces().filter((p) => p.color === "b")));
 
-  blackCaptured = computed(() => this.sortPieces(this.chess.capturedPieces().filter((p) => p.color === "w")).reverse());
+  protected readonly blackCaptured = computed((): ChessPieceType[] =>
+    this.sortPieces(this.chess.capturedPieces().filter((p) => p.color === "w")).reverse(),
+  );
 
-  whitePoints = computed(() => this.calculatePoints(this.whiteCaptured()));
-  blackPoints = computed(() => this.calculatePoints(this.blackCaptured()));
-  points = computed(() => this.whitePoints() - this.blackPoints());
-  absPoints = computed(() => Math.abs(this.points()));
+  protected readonly points = computed((): number => this.calculatePoints(this.whiteCaptured()) - this.calculatePoints(this.blackCaptured()));
+
+  protected readonly absPoints = computed((): number => Math.abs(this.points()));
+
+  protected readonly containerClassName = computed((): string => {
+    const base = "flex h-6 w-full items-center justify-between gap-1 overflow-auto px-1";
+    const scale = this.chess.flip() ? "-scale-x-100" : "";
+    return `${base} ${scale}`.trim();
+  });
+
+  protected readonly pointsContainerClassName = computed((): string => {
+    const points = this.points();
+    if (points > 0) return "grow text-left";
+    if (points < 0) return "grow text-right";
+    return "grow";
+  });
+
+  protected readonly pointsTextClassName = computed((): string => {
+    const points = this.points();
+    const isPlayerAdvantage = this.chess.player() === "w" ? points > 0 : points < 0;
+    const base = "inline-block text-base font-semibold";
+    const color = isPlayerAdvantage ? "text-green-800" : "text-red-800";
+    const scale = this.chess.flip() ? "-scale-x-100" : "";
+    return `${base} ${color} ${scale}`.trim();
+  });
 
   private calculatePoints(pieces: ChessPieceType[]): number {
     return pieces.reduce((sum, piece) => sum + PIECE_VALUES[piece.type], 0);

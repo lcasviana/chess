@@ -1,37 +1,31 @@
-import { NgClass } from "@angular/common";
-import { ChangeDetectionStrategy, Component, input, ViewEncapsulation } from "@angular/core";
+import { ChangeDetectionStrategy, Component, computed, input, ViewEncapsulation } from "@angular/core";
 
 import { COLOR_NAMES, PIECE_NAMES, type ChessPieceType } from "@chess/shared";
 
 @Component({
   selector: "chess-piece",
   template: `
-    <svg
-      [id]="piece().id"
-      [style.view-transition-name]="piece().id"
-      class="size-full drop-shadow-xs transition-all duration-200"
-      [ngClass]="{
-        'fill-zinc-300 drop-shadow-zinc-900': piece().color === 'w',
-        'fill-zinc-900 drop-shadow-zinc-300': piece().color === 'b',
-        'scale-125': selected(),
-        'rotate-180': flip(),
-      }"
-      [attr.aria-label]="COLOR_NAMES[piece().color] + ' ' + PIECE_NAMES[piece().type]"
-      role="img"
-    >
+    <svg [id]="piece().id" [style.view-transition-name]="piece().id" [class]="svgClassName()" [attr.aria-label]="ariaLabel()" role="img">
       <use [attr.href]="'./chess.svg#' + piece().type" />
     </svg>
   `,
   host: { class: "contents" },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass],
 })
 export class ChessPieceComponent {
-  piece = input.required<ChessPieceType>();
-  selected = input(false);
-  flip = input(false);
+  public readonly piece = input.required<ChessPieceType>();
+  public readonly selected = input(false);
+  public readonly flip = input(false);
 
-  protected readonly COLOR_NAMES = COLOR_NAMES;
-  protected readonly PIECE_NAMES = PIECE_NAMES;
+  protected readonly ariaLabel = computed(() => `${COLOR_NAMES[this.piece().color]} ${PIECE_NAMES[this.piece().type]}`);
+
+  protected readonly svgClassName = computed(() => {
+    const isWhite = this.piece().color === "w";
+    const base = "size-full drop-shadow-xs transition-all duration-200";
+    const color = isWhite ? "fill-zinc-300 drop-shadow-zinc-900" : "fill-zinc-900 drop-shadow-zinc-300";
+    const scale = this.selected() ? "scale-125" : "";
+    const rotate = this.flip() ? "rotate-180" : "";
+    return `${base} ${color} ${scale} ${rotate}`.trim();
+  });
 }

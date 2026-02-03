@@ -1,7 +1,7 @@
-import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, computed, inject, ViewEncapsulation } from "@angular/core";
 
 import { COLOR_NAMES, type ChessPieceType, type GameResult } from "@chess/shared";
+
 import { ChessService } from "../services/chess.service";
 import { ChessPieceComponent } from "./chess-piece.component";
 
@@ -18,17 +18,7 @@ const BLACK_KING: ChessPieceType = { id: "black-king", color: "b", type: "k" };
           <div class="size-16">
             <chess-piece [piece]="resultPlayer()" [selected]="false" [flip]="false" />
           </div>
-          <button
-            class="mt-1 cursor-pointer rounded-lg px-3 py-1 text-base font-bold transition-all"
-            [ngClass]="{
-              'bg-zinc-300 text-zinc-900 hover:bg-zinc-400': chess.player() === 'w',
-              'bg-zinc-900 text-zinc-300 hover:bg-zinc-800': chess.player() === 'b',
-            }"
-            aria-label="Play Again"
-            (click)="chess.resetGame()"
-          >
-            Play Again
-          </button>
+          <button [class]="buttonClassName()" aria-label="Play Again" (click)="chess.resetGame()">Play Again</button>
         </div>
       </div>
     }
@@ -36,12 +26,24 @@ const BLACK_KING: ChessPieceType = { id: "black-king", color: "b", type: "k" };
   host: { class: "contents" },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, ChessPieceComponent],
+  imports: [ChessPieceComponent],
 })
 export class ChessEndComponent {
-  protected chess = inject(ChessService);
+  protected readonly chess = inject(ChessService);
 
-  result = computed<GameResult>(() => {
+  private readonly result = computed((): GameResult => this.getResult());
+
+  protected readonly resultMessage = computed((): string => this.getResultMessage(this.result()));
+
+  protected readonly resultPlayer = computed((): ChessPieceType => this.getResultPlayer(this.result()));
+
+  protected readonly buttonClassName = computed((): string =>
+    this.chess.player() === "w"
+      ? "mt-1 cursor-pointer rounded-lg px-3 py-1 text-base font-bold transition-all bg-zinc-300 text-zinc-900 hover:bg-zinc-400"
+      : "mt-1 cursor-pointer rounded-lg px-3 py-1 text-base font-bold transition-all bg-zinc-900 text-zinc-300 hover:bg-zinc-800",
+  );
+
+  private getResult(): GameResult {
     if (this.chess.isCheckmate()) {
       const isPlayerWin = this.chess.turn() !== this.chess.player();
       return {
@@ -56,10 +58,9 @@ export class ChessEndComponent {
       return { type: "draw", player: null };
     }
     return { type: "draw", player: null };
-  });
+  }
 
-  resultMessage = computed(() => {
-    const result = this.result();
+  private getResultMessage(result: GameResult): string {
     switch (result.type) {
       case "win":
       case "lose":
@@ -71,10 +72,9 @@ export class ChessEndComponent {
         if (this.chess.isInsufficientMaterial()) return "Draw by Insufficient Material!";
         return "Draw!";
     }
-  });
+  }
 
-  resultPlayer = computed<ChessPieceType>(() => {
-    const result = this.result();
+  private getResultPlayer(result: GameResult): ChessPieceType {
     switch (result.player) {
       case "w":
         return WHITE_KING;
@@ -83,5 +83,5 @@ export class ChessEndComponent {
       default:
         return this.chess.player() === "w" ? WHITE_KING : BLACK_KING;
     }
-  });
+  }
 }

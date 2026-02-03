@@ -1,4 +1,3 @@
-import { NgClass } from "@angular/common";
 import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, input, viewChild, ViewEncapsulation } from "@angular/core";
 import type { Square } from "chess.js";
 
@@ -16,15 +15,7 @@ import { ChessPieceComponent } from "./chess-piece.component";
       role="gridcell"
       [attr.aria-selected]="isSelected()"
       [style.padding]="'15%'"
-      class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85 focus:outline-none focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-800"
-      [ngClass]="{
-        'bg-red-200/25': isInCheck() !== null,
-        'animate-pulse': isInCheck() === 'check',
-        'bg-amber-200/25': !isInCheck() && isLastMove(),
-        'bg-stone-500': !isInCheck() && !isLastMove() && color() === 'light',
-        'bg-stone-600': !isInCheck() && !isLastMove() && color() === 'dark',
-        'cursor-pointer': isValidMove() || piece()?.color === chess.player(),
-      }"
+      [class]="squareClassName()"
       [attr.aria-label]="ariaLabel()"
       (keydown)="onSquarePress($event)"
       (click)="chess.onSquareClick(square())"
@@ -45,40 +36,100 @@ import { ChessPieceComponent } from "./chess-piece.component";
   host: { class: "contents" },
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
-  imports: [NgClass, ChessPieceComponent],
+  imports: [ChessPieceComponent],
 })
 export class ChessSquareComponent {
-  protected chess = inject(ChessService);
+  protected readonly chess = inject(ChessService);
 
-  square = input.required<Square>();
-  color = input.required<ChessSquareColor>();
+  public readonly square = input.required<Square>();
+  public readonly color = input.required<ChessSquareColor>();
 
-  private squareRef = viewChild<ElementRef<HTMLDivElement>>("squareRef");
+  private readonly squareRef = viewChild<ElementRef<HTMLDivElement>>("squareRef");
 
-  piece = computed(() => this.chess.board()[this.square()]);
-  isSelected = computed(() => this.chess.selectedSquare() === this.square());
-  isFocused = computed(() => this.chess.focusedSquare() === this.square());
-  isValidMove = computed(() => this.chess.validMoves().includes(this.square()));
-  isLastMove = computed(() => {
+  protected readonly piece = computed(() => this.chess.board()[this.square()]);
+
+  protected readonly isSelected = computed((): boolean => this.chess.selectedSquare() === this.square());
+
+  protected readonly isValidMove = computed((): boolean => this.chess.validMoves().includes(this.square()));
+
+  private readonly isFocused = computed((): boolean => this.chess.focusedSquare() === this.square());
+
+  protected readonly tabIndex = computed((): number => (this.isFocused() ? 0 : -1));
+
+  private readonly isLastMove = computed((): boolean => {
     const lastMove = this.chess.lastMove();
     return lastMove?.from === this.square() || lastMove?.to === this.square();
   });
-  tabIndex = computed(() => (this.isFocused() ? 0 : -1));
 
-  isInCheck = computed((): ChessSquareInCheck => {
+  private readonly isInCheck = computed((): ChessSquareInCheck => this.getIsInCheck(this.piece()));
+
+  protected readonly ariaLabel = computed((): string => this.getAriaLabel(this.piece(), this.isSelected(), this.isValidMove()));
+
+  protected readonly squareClassName = computed((): string => {
+    const isInCheck = this.isInCheck();
+    const isValidMove = this.isValidMove();
+    const isLastMove = this.isLastMove();
     const piece = this.piece();
+    const base =
+      "relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85 focus:outline-none focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-800";
+
+    let bg: string;
+    if (isInCheck !== null) {
+      bg = "bg-red-200/25";
+    } else if (isLastMove) {
+      bg = "bg-amber-200/25";
+    } else {
+      bg = this.color() === "light" ? "bg-stone-500" : "bg-stone-600";
+    }
+
+    const pulse = isInCheck === "check" ? "animate-pulse" : "";
+    const cursor = isValidMove || piece?.color === this.chess.player() ? "cursor-pointer" : "";
+
+    return `${base} ${bg} ${pulse} ${cursor}`.trim();
+  });
+
+  private readonly focusEffect = effect(() => {
+    if (this.isFocused()) {
+      const ref = this.squareRef();
+      if (ref) {
+        ref.nativeElement.focus();
+      }
+    }
+  });
+
+  public onSquarePress(event: KeyboardEvent): void {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      this.chess.onSquareClick(this.square());
+      return;
+    }
+
+    const arrowMap: Record<string, "up" | "down" | "left" | "right" | undefined> = {
+      ArrowUp: "up",
+      ArrowDown: "down",
+      ArrowLeft: "left",
+      ArrowRight: "right",
+    };
+
+    const direction = arrowMap[event.key];
+    if (!direction) return;
+
+    event.preventDefault();
+    const nextSquare = getAdjacentSquare(this.square(), direction, this.chess.flip());
+    if (nextSquare) {
+      this.chess.focusedSquare.set(nextSquare);
+    }
+  }
+
+  private getIsInCheck(piece: ReturnType<typeof this.chess.board>[Square] | undefined): ChessSquareInCheck {
     if (piece?.type !== "k" || piece?.color !== this.chess.turn()) return null;
     if (this.chess.isCheckmate()) return "checkmate";
     if (this.chess.isCheck()) return "check";
     return null;
-  });
+  }
 
-  ariaLabel = computed(() => {
+  private getAriaLabel(piece: ReturnType<typeof this.chess.board>[Square] | undefined, isSelected: boolean, isValidMove: boolean): string {
     const square = this.square();
-    const piece = this.piece();
-    const isSelected = this.isSelected();
-    const isValidMove = this.isValidMove();
-
     const parts = [square.toUpperCase()];
 
     if (piece) {
@@ -101,40 +152,5 @@ export class ChessSquareComponent {
     if (isValidMove && piece) parts.push("capturable");
 
     return parts.join(", ");
-  });
-
-  constructor() {
-    effect(() => {
-      if (this.isFocused()) {
-        const ref = this.squareRef();
-        if (ref) {
-          ref.nativeElement.focus();
-        }
-      }
-    });
-  }
-
-  onSquarePress(event: KeyboardEvent): void {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      this.chess.onSquareClick(this.square());
-      return;
-    }
-
-    const arrowMap: Record<string, "up" | "down" | "left" | "right" | undefined> = {
-      ArrowUp: "up",
-      ArrowDown: "down",
-      ArrowLeft: "left",
-      ArrowRight: "right",
-    };
-
-    const direction = arrowMap[event.key];
-    if (!direction) return;
-
-    event.preventDefault();
-    const nextSquare = getAdjacentSquare(this.square(), direction, this.chess.flip());
-    if (nextSquare) {
-      this.chess.focusedSquare.set(nextSquare);
-    }
   }
 }
