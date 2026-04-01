@@ -7,20 +7,20 @@ import type { Color, Move, Piece, Square } from "./types";
 const STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
 export class ChessEngine {
-  private b: ChessBoard;
+  board: ChessBoard;
   private hashCounts: Map<string, number>;
 
   constructor(fen?: string) {
-    this.b = new ChessBoard();
+    this.board = new ChessBoard();
     this.hashCounts = new Map();
-    loadFen(this.b, fen ?? STARTING_FEN);
+    loadFen(this.board, fen ?? STARTING_FEN);
     this._recordHash();
   }
 
   load(fen: string): void {
-    this.b = new ChessBoard();
+    this.board = new ChessBoard();
     this.hashCounts = new Map();
-    loadFen(this.b, fen);
+    loadFen(this.board, fen);
     this._recordHash();
   }
 
@@ -29,48 +29,48 @@ export class ChessEngine {
   }
 
   fen(): string {
-    return serializeFen(this.b);
+    return serializeFen(this.board);
   }
 
   turn(): Color {
-    return this.b.turn;
+    return this.board.turn;
   }
 
   legalMoves(): Move[] {
-    return generateLegal(this.b);
+    return generateLegal(this.board);
   }
 
   legalMovesFrom(sq: Square): Move[] {
-    return _legalMovesFrom(this.b, sq);
+    return _legalMovesFrom(this.board, sq);
   }
 
   makeMove(move: Move): void {
-    this.b.makeMove(move);
+    this.board.makeMove(move);
     this._recordHash();
   }
 
   unmakeMove(): void {
     this._unrecordHash();
-    this.b.unmakeMove();
+    this.board.unmakeMove();
   }
 
   isCheck(): boolean {
-    const color = this.b.turn;
+    const color = this.board.turn;
     const opp = (color ^ 1) as Color;
-    const kingSq = lsb(this.b.pieces[color][5]);
-    return isAttacked(kingSq, opp, this.b, this.b.allOccupied());
+    const kingSq = lsb(this.board.pieces[color][5]);
+    return isAttacked(kingSq, opp, this.board, this.board.allOccupied());
   }
 
   isCheckmate(): boolean {
-    return this.isCheck() && generateLegal(this.b).length === 0;
+    return this.isCheck() && generateLegal(this.board).length === 0;
   }
 
   isStalemate(): boolean {
-    return !this.isCheck() && generateLegal(this.b).length === 0;
+    return !this.isCheck() && generateLegal(this.board).length === 0;
   }
 
   isDraw(): boolean {
-    return this.isStalemate() || this.b.halfmove >= 100 || this.isThreefoldRepetition() || this.isInsufficientMaterial();
+    return this.isStalemate() || this.board.halfmove >= 100 || this.isThreefoldRepetition() || this.isInsufficientMaterial();
   }
 
   isThreefoldRepetition(): boolean {
@@ -79,7 +79,7 @@ export class ChessEngine {
   }
 
   isInsufficientMaterial(): boolean {
-    const b = this.b;
+    const b = this.board;
     const wPieces = b.pieces[1];
     const bPieces = b.pieces[0];
 
@@ -119,15 +119,15 @@ export class ChessEngine {
   }
 
   pieceAt(sq: Square): { piece: Piece; color: Color } | null {
-    return this.b.pieceAt(sq);
+    return this.board.pieceAt(sq);
   }
 
   zobristHash(): bigint {
-    return (BigInt(this.b.hashHi) << 32n) | BigInt(this.b.hashLo);
+    return (BigInt(this.board.hashHi) << 32n) | BigInt(this.board.hashLo);
   }
 
   private _hashKey(): string {
-    return this.b.hashHi.toString(16) + this.b.hashLo.toString(16);
+    return this.board.hashHi.toString(16) + this.board.hashLo.toString(16);
   }
 
   private _recordHash(): void {
