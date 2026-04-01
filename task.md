@@ -80,7 +80,7 @@ export type MoveFlags = number;
 ### Move (engine-internal — all numbers)
 
 ```typescript
-export interface Move {
+export type Move = {
   from: Square;
   to: Square;
   piece: Piece;
@@ -88,20 +88,19 @@ export interface Move {
   captured: Piece; // Piece.None if not a capture
   promotion: Piece; // Piece.None if not a promotion
   flags: MoveFlags;
-  san: string; // filled in after legality check
-}
+};
 ```
 
 **Packed move optimization** (for search-intensive paths): encode a move into a single 32-bit integer. Bit layout (27 bits used, fits in a JS safe integer):
 
 ```
-bits  0– 5: from       (6 bits)
-bits  6–11: to         (6 bits)
-bits 12–14: piece      (3 bits)
-bits 15–17: captured   (3 bits, 7=Piece.None)
-bits 18–20: promotion  (3 bits, 7=Piece.None)
-bits 21:    color      (1 bit)
-bits 22–26: flags      (5 bits)
+bits  0– 5: from      (6 bits)
+bits  6–11: to        (6 bits)
+bits 12–14: piece     (3 bits)
+bits 15–17: captured  (3 bits, 7=Piece.None)
+bits 18–20: promotion (3 bits, 7=Piece.None)
+bits 21:    color     (1 bit)
+bits 22–26: flags     (5 bits)
 ```
 
 Implement `encodeMove(…): number` and `decodeMove(m: number): Move` helpers. The bot's minimax can store move lists as `number[]` — avoids GC pressure from object arrays.
@@ -268,14 +267,14 @@ const CastleFlag = { WK: 1, WQ: 2, BK: 4, BQ: 8 } as const;
 ### HistoryEntry (everything needed to unmake)
 
 ```typescript
-interface HistoryEntry {
+type HistoryEntry = {
   move: Move; // the move that was made
   castling: number; // castling bitmask before the move
   enPassant: Square | -1;
   halfmove: number;
   hashLo: number; // Zobrist hash low 32 bits before the move
   hashHi: number; // Zobrist hash high 32 bits before the move
-}
+};
 ```
 
 ### makeMove — XOR-based, no allocation
@@ -409,14 +408,14 @@ function legalMovesFrom(b: ChessBoard, sq: Square): Move[];
 ## Phase 6 — fen.ts
 
 ```typescript
-interface FenState {
+type FenState = {
   pieces: [Bitboard[], Bitboard[]];
   turn: Color;
   castling: number; // CastleFlag bitmask
   enPassant: Square | -1;
   halfmove: number;
   fullmove: number;
-}
+};
 
 export function parseFen(fen: string): FenState;
 export function serializeFen(b: ChessBoard): string;
@@ -430,7 +429,7 @@ En passant field: parse file letter + rank → compute square index.
 
 ## Phase 7 — san.ts
 
-SAN is **lazy** — do not compute it for every move in `generateLegal`. Only compute when a move is actually played (UI path) or `moves({ verbose: true })` is called. Store `san: ""` in engine-internal `Move`; fill it only in the adapter layer. This avoids string allocation in the bot's search.
+SAN is **lazy** — only computed when a move is actually played (adapter `move()` call). `Move` carries no `san` field; the adapter computes it via `toSan` and stores it in `sanHistory`. This avoids all string allocation in the bot's search.
 
 ```typescript
 export function toSan(move: Move, board: ChessBoard, legal: Move[]): string;
@@ -452,7 +451,7 @@ Piece char lookup: `[' ','N','B','R','Q','K'][piece]` (pawn = space, handled sep
 
 ## Phase 8 — chess.ts (engine façade)
 
-Numeric API — no string types except `san` and FEN strings.
+Numeric API — no string types except FEN strings.
 
 ```typescript
 export class ChessEngine {
@@ -490,12 +489,12 @@ Thin wrapper — converts string types ↔ numeric types. No logic lives here.
 export type ChessColor      = "w" | "b"
 export type ChessSquare     = "a1" | ... | "h8"
 export type ChessPieceSymbol = "p" | "n" | "b" | "r" | "q" | "k"
-export interface ChessPiece { type: ChessPieceSymbol; color: ChessColor }
-export interface ChessMove {
-  from: ChessSquare; to: ChessSquare
-  piece: ChessPieceSymbol; color: ChessColor
-  captured?: ChessPieceSymbol; promotion?: ChessPieceSymbol
-  flags: string; san: string
+export type ChessPiece = { type: ChessPieceSymbol; color: ChessColor }
+export type ChessMove = {
+  from: ChessSquare; to: ChessSquare;
+  piece: ChessPieceSymbol; color: ChessColor;
+  captured?: ChessPieceSymbol; promotion?: ChessPieceSymbol;
+  flags: string; san: string;
 }
 export const SQUARES: ChessSquare[]   // ["a8","b8",...,"h1"]
 
@@ -506,7 +505,7 @@ function pieceToStr(p: Piece): ChessPieceSymbol
 function strToPiece(s: ChessPieceSymbol): Piece
 function sqToStr(s: Square): ChessSquare        // SQ_NAMES[s]
 function strToSq(s: ChessSquare): Square        // SQ_INDEX[s]
-function moveToChess(m: Move): ChessMove        // convert flags number → flags string
+function moveToChess(m: Move, san: string): ChessMove  // convert flags number → flags string, attach san
 function chessToMoveInput(m: {from, to, promotion?}): {from: Square, to: Square, promotion: Piece}
 
 export class Chess {
@@ -519,7 +518,7 @@ export class Chess {
   fen(): string
   turn(): ChessColor
   board(): (ChessPiece | null)[][]   // board[0]=rank8, board[7]=rank1
-  moves(opts?: { square?: ChessSquare; verbose: true }): ChessMove[]
+  legalMoves(square?: ChessSquare): ChessMove[]
   move(input: { from: ChessSquare; to: ChessSquare; promotion?: ChessPieceSymbol }): ChessMove
   undo(): ChessMove | undefined
   isCheck(): boolean
