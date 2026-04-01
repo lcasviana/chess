@@ -157,6 +157,7 @@ function createChessStore(): ChessStore {
         const result = chess.move(move);
 
         if (result) {
+          // eslint-disable-next-line solid/reactivity
           withViewTransition(() => {
             batch(() => {
               updatePiecePositions(move.from as Square, move.to as Square, result);
@@ -228,6 +229,7 @@ function createChessStore(): ChessStore {
         });
 
         if (move) {
+          // eslint-disable-next-line solid/reactivity
           withViewTransition(() => {
             batch(() => {
               updatePiecePositions(currentSelection, square, move);

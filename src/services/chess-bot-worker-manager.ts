@@ -17,7 +17,8 @@ export class ChessBotWorkerManager {
       const { id, move, error } = e.data;
       const p = this.pending.get(id);
       if (!p) return;
-      error ? p.reject(new Error(error)) : p.resolve(move);
+      if (error) p.reject(new Error(error));
+      else p.resolve(move);
       this.pending.delete(id);
     };
   }

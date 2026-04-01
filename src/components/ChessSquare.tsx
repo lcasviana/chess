@@ -17,17 +17,17 @@ export type ChessSquareProps = {
   color: ChessSquareColor;
 };
 
-export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: ChessSquareProps): JSX.Element => {
+export const ChessSquare: Component<ChessSquareProps> = (props: ChessSquareProps): JSX.Element => {
   const { player, flip, board, selectedSquare, focusedSquare, setFocusedSquare, validMoves, lastMove, onSquareClick, isCheck, isCheckmate, turn } =
     useChess();
 
   let squareRef: HTMLDivElement | undefined;
 
-  const piece = () => board()[square];
-  const isSelected = () => selectedSquare() === square;
-  const isFocused = () => focusedSquare() === square;
-  const isValidMove = () => validMoves().includes(square);
-  const isLastMove = () => lastMove()?.from === square || lastMove()?.to === square;
+  const piece = () => board()[props.square];
+  const isSelected = () => selectedSquare() === props.square;
+  const isFocused = () => focusedSquare() === props.square;
+  const isValidMove = () => validMoves().includes(props.square);
+  const isLastMove = () => lastMove()?.from === props.square || lastMove()?.to === props.square;
   const tabIndex = () => (isFocused() ? 0 : -1);
   const isInCheck = (): ChessSquareInCheck => {
     if (piece()?.type !== "k" || piece()?.color !== turn()) return null;
@@ -47,7 +47,7 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
     // Enter/Space: Select piece or make move
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      onSquareClick(square);
+      onSquareClick(props.square);
       return;
     }
 
@@ -63,7 +63,7 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
     if (!direction) return;
 
     event.preventDefault();
-    const nextSquare = getAdjacentSquare(square, direction, flip());
+    const nextSquare = getAdjacentSquare(props.square, direction, flip());
     if (nextSquare) {
       setFocusedSquare(nextSquare);
     }
@@ -96,8 +96,8 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
 
   return (
     <div
-      ref={squareRef}
-      id={square}
+      ref={(el) => (squareRef = el)}
+      id={props.square}
       tabIndex={tabIndex()}
       role="gridcell"
       aria-selected={isSelected()}
@@ -107,13 +107,13 @@ export const ChessSquare: Component<ChessSquareProps> = ({ square, color }: Ches
         "bg-red-200/25": isInCheck() !== null,
         "animate-pulse": isInCheck() === "check",
         "bg-amber-200/25": !isInCheck() && isLastMove(),
-        "bg-stone-500": !isInCheck() && !isLastMove() && color === "light",
-        "bg-stone-600": !isInCheck() && !isLastMove() && color === "dark",
+        "bg-stone-500": !isInCheck() && !isLastMove() && props.color === "light",
+        "bg-stone-600": !isInCheck() && !isLastMove() && props.color === "dark",
         "cursor-pointer": isValidMove() || piece()?.color === player(),
       }}
-      aria-label={getEnhancedAriaLabel(square, piece(), isSelected(), isValidMove())}
+      aria-label={getEnhancedAriaLabel(props.square, piece(), isSelected(), isValidMove())}
       onKeyDown={(event: KeyboardEvent) => onSquarePress(event)}
-      onClick={() => onSquareClick(square)}
+      onClick={() => onSquareClick(props.square)}
     >
       <Show when={piece()}>
         {(piece: Accessor<ChessPieceType>): JSX.Element => (

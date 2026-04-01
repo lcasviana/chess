@@ -46,10 +46,10 @@ export type ChessCapturedPiecesProps = {
   pieces: Accessor<ChessPieceType[]>;
 };
 
-const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = ({ pieces }: ChessCapturedPiecesProps): JSX.Element => {
+const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = (props: ChessCapturedPiecesProps): JSX.Element => {
   return (
     <div class="flex flex-wrap items-center">
-      <For each={pieces()} fallback={<></>}>
+      <For each={props.pieces()} fallback={<></>}>
         {(piece: ChessPieceType): JSX.Element => (
           <div class="size-5">
             <ChessPiece piece={(): ChessPieceType => piece} selected={falsy} flip={falsy} />

@@ -44,7 +44,7 @@ export const ChessBoard: Component = (): JSX.Element => {
         {announcement()}
       </div>
       <div
-        style="grid-template: auto repeat(8, 1fr) auto / auto repeat(8, 1fr) auto"
+        style={{ "grid-template": "auto repeat(8, 1fr) auto / auto repeat(8, 1fr) auto" }}
         class="grid aspect-square size-full max-h-dvh max-w-dvw overflow-auto"
         classList={{ "rotate-180": flip() }}
       >

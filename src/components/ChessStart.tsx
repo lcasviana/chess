@@ -24,7 +24,7 @@ export const ChessStart: Component = (): JSX.Element => {
     <Show when={!gameStarted()}>
       <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/25 backdrop-blur-xs">
         <form
-          ref={formRef}
+          ref={(el) => (formRef = el)}
           tabIndex={-1}
           class="flex flex-col items-center gap-4 rounded-lg bg-stone-800 p-4 shadow-sm shadow-stone-600 focus:outline-none"
           onSubmit={(e: SubmitEvent): void => {

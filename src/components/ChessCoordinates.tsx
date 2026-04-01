@@ -9,21 +9,21 @@ export type ChessCoordinatesProps = {
   flip: Accessor<boolean>;
 };
 
-export const ChessCoordinates: Component<ChessCoordinatesProps> = ({ type, gridArea, flip }: ChessCoordinatesProps): JSX.Element => {
+export const ChessCoordinates: Component<ChessCoordinatesProps> = (props: ChessCoordinatesProps): JSX.Element => {
   return (
     <div
-      style={{ "grid-area": gridArea }}
+      style={{ "grid-area": props.gridArea }}
       class="grid"
       classList={{
-        "grid-rows-1 grid-cols-8": type === "files",
-        "grid-rows-8 grid-cols-1": type === "ranks",
+        "grid-rows-1 grid-cols-8": props.type === "files",
+        "grid-rows-8 grid-cols-1": props.type === "ranks",
       }}
     >
-      <For each={coordinates[type]}>
+      <For each={coordinates[props.type]}>
         {(label: number | string): JSX.Element => (
           <div
             class="m-auto flex size-5 items-center justify-center text-sm font-semibold text-stone-50/50 select-none"
-            classList={{ "rotate-180": flip() }}
+            classList={{ "rotate-180": props.flip() }}
           >
             {label}
           </div>
