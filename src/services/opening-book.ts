@@ -1,4 +1,4 @@
-import type { Chess } from "chess.js";
+import type { Chess } from "~/chess";
 
 export interface OpeningMove {
   move: string;

@@ -1,4 +1,4 @@
-import type { Move } from "chess.js";
+import type { Move } from "~/chess";
 
 import type { BotConfig } from "./chess-bot";
 

@@ -197,6 +197,14 @@ export class Chess {
     return result;
   }
 
+  moves(options: { verbose: true; square?: ChessSquare }): ChessMove[];
+  moves(options?: { verbose?: false; square?: ChessSquare }): string[];
+  moves(options?: { verbose?: boolean; square?: ChessSquare }): ChessMove[] | string[] {
+    const moves = this.legalMoves(options?.square);
+    if (options?.verbose) return moves;
+    return moves.map((m) => m.san);
+  }
+
   legalMoves(square?: ChessSquare): ChessMove[] {
     const b = this.engine.board;
     const moves = square ? this.engine.legalMovesFrom(strToSq(square)) : this.engine.legalMoves();

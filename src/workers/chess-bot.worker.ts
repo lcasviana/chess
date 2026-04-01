@@ -1,4 +1,4 @@
-import { Chess } from "chess.js";
+import { Chess } from "~/chess";
 
 import type { BotConfig } from "../services/chess-bot";
 import { createChessBot } from "../services/chess-bot";

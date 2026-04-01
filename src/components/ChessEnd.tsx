@@ -1,8 +1,7 @@
 import type { Accessor, Component, JSX } from "solid-js";
 import { Show, createMemo } from "solid-js";
 
-import type { Color } from "chess.js";
-
+import type { Color } from "~/chess";
 import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
 

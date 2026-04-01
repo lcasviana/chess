@@ -1,4 +1,5 @@
 export { Chess, SQUARES } from "./adapter";
-export type { ChessColor, ChessSquare as Square, ChessPieceSymbol as PieceSymbol, ChessPiece, ChessMove as Move } from "./adapter";
+export type { ChessColor as Color, ChessSquare as Square, ChessPieceSymbol as PieceSymbol, ChessPiece as Piece, ChessMove as Move } from "./adapter";
 export { ChessEngine } from "./chess";
-export { Piece, Color, MoveFlags } from "./types";
+export { MoveFlags } from "./types";
+export { Piece as NumPiece, Color as NumColor } from "./types";

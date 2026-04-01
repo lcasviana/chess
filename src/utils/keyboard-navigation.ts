@@ -1,4 +1,4 @@
-import type { Square } from "chess.js";
+import type { Square } from "~/chess";
 
 /**
  * Parse a square notation into file and rank indices

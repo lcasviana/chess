@@ -1,5 +1,4 @@
-import { Chess, type Color, type Move } from "chess.js";
-
+import { Chess, type Color, type Move } from "~/chess";
 import { CENTER_SQUARES, PIECE_VALUES } from "~/utils/constants";
 
 import { ChessEvaluator } from "./chess-evaluator";
