@@ -1,12 +1,13 @@
-import type { Color } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
-import { createEffect, For, Show } from "solid-js";
+import { For, Show, createEffect } from "solid-js";
+
+import type { Color } from "chess.js";
 
 import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
 
 import type { ChessPieceType } from "./ChessPiece";
-import { blackKing, ChessPiece, colorNames, colors, whiteKing } from "./ChessPiece";
+import { ChessPiece, blackKing, colorNames, colors, whiteKing } from "./ChessPiece";
 
 export const ChessStart: Component = (): JSX.Element => {
   const { gameStarted, player, setPlayer, onGameStart } = useChess();

@@ -1,8 +1,8 @@
 import type { Accessor, Component, JSX } from "solid-js";
-import { createMemo, For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 
 import { useChess } from "~/contexts/ChessContext";
-import { falsy, PIECE_VALUES } from "~/utils/constants";
+import { PIECE_VALUES, falsy } from "~/utils/constants";
 
 import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece } from "./ChessPiece";

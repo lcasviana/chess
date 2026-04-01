@@ -1,6 +1,7 @@
-import type { Square } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
-import { createEffect, Show } from "solid-js";
+import { Show, createEffect } from "solid-js";
+
+import type { Square } from "chess.js";
 
 import { useChess } from "~/contexts/ChessContext";
 import { getAdjacentSquare } from "~/utils/keyboard-navigation";

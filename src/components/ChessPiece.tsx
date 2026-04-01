@@ -1,5 +1,6 @@
-import type { Color, PieceSymbol } from "chess.js";
 import type { Accessor, Component, JSX } from "solid-js";
+
+import type { Color, PieceSymbol } from "chess.js";
 
 export type ChessPieceType = {
   id: string;

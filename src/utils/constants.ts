@@ -1,4 +1,5 @@
 import type { Accessor } from "solid-js";
+
 import type { PieceSymbol, Square } from "chess.js";
 
 export const truthy: Accessor<true> = (): true => true;

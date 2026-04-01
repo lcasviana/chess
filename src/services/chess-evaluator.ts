@@ -1,4 +1,5 @@
 import type { Chess, Color, PieceSymbol } from "chess.js";
+
 import { PIECE_VALUES } from "~/utils/constants";
 
 const scale = (tables: number[][][]) => tables.map((t) => t.map((r) => r.map((v) => v / 100)));

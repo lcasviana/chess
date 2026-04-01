@@ -1,7 +1,9 @@
 import { Chess, type Color, type Move } from "chess.js";
+
+import { CENTER_SQUARES, PIECE_VALUES } from "~/utils/constants";
+
 import { ChessEvaluator } from "./chess-evaluator";
 import * as OpeningBook from "./opening-book";
-import { CENTER_SQUARES, PIECE_VALUES } from "~/utils/constants";
 
 export interface BotConfig {
   searchDepth: number;

@@ -1,6 +1,6 @@
 // @refresh reload
 import type { DocumentComponentProps } from "@solidjs/start/server";
-import { createHandler, StartServer } from "@solidjs/start/server";
+import { StartServer, createHandler } from "@solidjs/start/server";
 import type { JSX } from "solid-js";
 
 export default createHandler(

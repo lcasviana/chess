@@ -1,4 +1,5 @@
 import type { Move } from "chess.js";
+
 import type { BotConfig } from "./chess-bot";
 
 export class ChessBotWorkerManager {
