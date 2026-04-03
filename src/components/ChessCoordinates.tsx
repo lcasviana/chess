@@ -22,6 +22,7 @@ export const ChessCoordinates: Component<ChessCoordinatesProps> = (props: ChessC
       <For each={coordinates[props.type]}>
         {(label: number | string): JSX.Element => (
           <div
+            aria-hidden="true"
             class="m-auto flex size-5 items-center justify-center text-sm font-semibold text-stone-50/50 select-none"
             classList={{ "rotate-180": props.flip() }}
           >

@@ -24,6 +24,9 @@ export const ChessStart: Component = (): JSX.Element => {
       <div class="fixed inset-0 z-10 flex items-center justify-center bg-black/25 backdrop-blur-xs">
         <form
           ref={(el) => (formRef = el)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="chess-start-title"
           tabIndex={-1}
           class="flex flex-col items-center gap-4 rounded-lg bg-stone-800 p-4 shadow-sm shadow-stone-600 focus:outline-none"
           onSubmit={(e: SubmitEvent): void => {
@@ -31,7 +34,9 @@ export const ChessStart: Component = (): JSX.Element => {
             onGameStart();
           }}
         >
-          <h2 class="text-base/none font-bold text-white">Choose Your Color</h2>
+          <h2 id="chess-start-title" class="text-base/none font-bold text-white">
+            Choose Your Color
+          </h2>
           <fieldset class="flex gap-3 border-0 p-0">
             <legend class="sr-only">Choose Your Color</legend>
             <For each={colors}>

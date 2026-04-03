@@ -6,6 +6,7 @@ import { SQUARES } from "~/chess";
 import { useChess } from "~/contexts/ChessContext";
 
 import { ChessCoordinates } from "./ChessCoordinates";
+import { pieceNames } from "./ChessPiece";
 import { ChessSquare } from "./ChessSquare";
 
 export const ChessBoard: Component = (): JSX.Element => {
@@ -20,14 +21,6 @@ export const ChessBoard: Component = (): JSX.Element => {
     if (!piece) return;
 
     const colorName = turn() === "w" ? "Black" : "White"; // Previous turn
-    const pieceNames: Record<string, string> = {
-      p: "Pawn",
-      n: "Knight",
-      b: "Bishop",
-      r: "Rook",
-      q: "Queen",
-      k: "King",
-    };
     const pieceName = pieceNames[piece.type];
 
     let text = `${colorName} ${pieceName} from ${move.from.toUpperCase()} to ${move.to.toUpperCase()}`;

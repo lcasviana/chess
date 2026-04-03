@@ -6,7 +6,7 @@ import { useChess } from "~/contexts/ChessContext";
 import { getAdjacentSquare } from "~/utils/keyboard-navigation";
 
 import type { ChessPieceType } from "./ChessPiece";
-import { ChessPiece } from "./ChessPiece";
+import { ChessPiece, colorNames, pieceNames } from "./ChessPiece";
 
 export type ChessSquareColor = "light" | "dark" | null;
 export type ChessSquareInCheck = "check" | "checkmate" | null;
@@ -34,8 +34,9 @@ export const ChessSquare: Component<ChessSquareProps> = (props: ChessSquareProps
     if (isCheck()) return "check";
     return null;
   };
+  const rowIndex = () => 9 - parseInt(props.square[1]);
+  const colIndex = () => props.square.charCodeAt(0) - 96;
 
-  // Auto-focus when focused square changes
   createEffect(() => {
     if (isFocused() && squareRef) {
       squareRef.focus();
@@ -43,14 +44,12 @@ export const ChessSquare: Component<ChessSquareProps> = (props: ChessSquareProps
   });
 
   const onSquarePress = (event: KeyboardEvent) => {
-    // Enter/Space: Select piece or make move
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       onSquareClick(props.square);
       return;
     }
 
-    // Arrow keys: Navigate between squares
     const arrowMap: Record<string, "up" | "down" | "left" | "right" | undefined> = {
       ArrowUp: "up",
       ArrowDown: "down",
@@ -68,27 +67,26 @@ export const ChessSquare: Component<ChessSquareProps> = (props: ChessSquareProps
     }
   };
 
-  const getEnhancedAriaLabel = (square: Square, piece: ChessPieceType | null | undefined, isSelected: boolean, isValidMove: boolean): string => {
+  const getEnhancedAriaLabel = (
+    square: Square,
+    piece: ChessPieceType | null | undefined,
+    isSelected: boolean,
+    isValidMove: boolean,
+    inCheck: ChessSquareInCheck,
+  ): string => {
     const parts = [square.toUpperCase()];
 
     if (piece) {
-      const colorName = piece.color === "w" ? "White" : "Black";
-      const pieceNames: Record<string, string> = {
-        p: "Pawn",
-        n: "Knight",
-        b: "Bishop",
-        r: "Rook",
-        q: "Queen",
-        k: "King",
-      };
       const pieceName = pieceNames[piece.type] || piece.type;
-      parts.push(`${colorName} ${pieceName}`);
+      parts.push(`${colorNames[piece.color]} ${pieceName}`);
     } else {
       parts.push(isValidMove ? "valid move" : "empty");
     }
 
     if (isSelected) parts.push("selected");
     if (isValidMove && piece) parts.push("capturable");
+    if (inCheck === "check") parts.push("in check");
+    else if (inCheck === "checkmate") parts.push("in checkmate");
 
     return parts.join(", ");
   };
@@ -100,6 +98,8 @@ export const ChessSquare: Component<ChessSquareProps> = (props: ChessSquareProps
       tabIndex={tabIndex()}
       role="gridcell"
       aria-selected={isSelected()}
+      aria-rowindex={rowIndex()}
+      aria-colindex={colIndex()}
       style={{ padding: "15%" }}
       class="relative inline-flex aspect-square items-center justify-center select-none hover:opacity-85 focus:outline-none focus-visible:z-10 focus-visible:ring-4 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-stone-800"
       classList={{
@@ -110,13 +110,13 @@ export const ChessSquare: Component<ChessSquareProps> = (props: ChessSquareProps
         "bg-stone-600": !isInCheck() && !isLastMove() && props.color === "dark",
         "cursor-pointer": isValidMove() || piece()?.color === player(),
       }}
-      aria-label={getEnhancedAriaLabel(props.square, piece(), isSelected(), isValidMove())}
+      aria-label={getEnhancedAriaLabel(props.square, piece(), isSelected(), isValidMove(), isInCheck())}
       onKeyDown={(event: KeyboardEvent) => onSquarePress(event)}
       onClick={() => onSquareClick(props.square)}
     >
       <Show when={piece()}>
         {(piece: Accessor<ChessPieceType>): JSX.Element => (
-          <div class="flex size-full items-center justify-center">
+          <div aria-hidden="true" class="flex size-full items-center justify-center">
             <ChessPiece piece={piece} selected={isSelected as Accessor<boolean>} flip={flip} />
           </div>
         )}

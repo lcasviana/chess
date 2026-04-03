@@ -15,9 +15,7 @@ export const ChessCaptured: Component = (): JSX.Element => {
   const blackCaptured: Accessor<ChessPieceType[]> = createMemo((): ChessPieceType[] =>
     sortPieces(capturedPieces().filter(({ color }: ChessPieceType): boolean => color === "w")).reverse(),
   );
-  const whitePoints: Accessor<number> = createMemo((): number => calculatePoints(whiteCaptured()));
-  const blackPoints: Accessor<number> = createMemo((): number => calculatePoints(blackCaptured()));
-  const points: Accessor<number> = createMemo((): number => whitePoints() - blackPoints());
+  const points: Accessor<number> = createMemo((): number => calculatePoints(whiteCaptured()) - calculatePoints(blackCaptured()));
   return (
     <div class="flex h-6 w-full items-center justify-between gap-1 overflow-auto px-1" classList={{ "-scale-x-100": flip() }}>
       <ChessCapturedPieces pieces={whiteCaptured} />
@@ -49,7 +47,7 @@ export type ChessCapturedPiecesProps = {
 const ChessCapturedPieces: Component<ChessCapturedPiecesProps> = (props: ChessCapturedPiecesProps): JSX.Element => {
   return (
     <div class="flex flex-wrap items-center">
-      <For each={props.pieces()} fallback={<></>}>
+      <For each={props.pieces()}>
         {(piece: ChessPieceType): JSX.Element => (
           <div class="size-5">
             <ChessPiece piece={(): ChessPieceType => piece} selected={falsy} flip={falsy} />

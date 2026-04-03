@@ -12,6 +12,6 @@
     "paths": { "~/*": ["./src/*"] },
     "strict": true,
     "target": "ESNext",
-    "types": ["vinxi/types/client"]
+    "types": ["vinxi/types/client", "bun-types"]
   }
 }

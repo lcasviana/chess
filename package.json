@@ -22,8 +22,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10",
+    "@solidjs/testing-library": "^0",
     "@tailwindcss/vite": "^4",
     "@trivago/prettier-plugin-sort-imports": "^6",
+    "@types/bun": "latest",
     "eslint": "^10",
     "eslint-config-prettier": "^10",
     "eslint-plugin-solid": "^0",
