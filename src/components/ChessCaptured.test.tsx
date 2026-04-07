@@ -1,13 +1,13 @@
 import { render, screen } from "@solidjs/testing-library";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMockStore } from "~/test-utils/mockChessContext";
 
 import { ChessCaptured } from "./ChessCaptured";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 let mockStore = createMockStore();
 
-mock.module("~/contexts/ChessContext", () => ({
+vi.mock("~/contexts/ChessContext", () => ({
   useChess: () => mockStore,
 }));
 

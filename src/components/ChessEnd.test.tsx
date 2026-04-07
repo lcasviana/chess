@@ -1,13 +1,13 @@
 import { render, screen } from "@solidjs/testing-library";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMockStore } from "~/test-utils/mockChessContext";
 
 import { ChessEnd } from "./ChessEnd";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 let mockStore = createMockStore();
 
-mock.module("~/contexts/ChessContext", () => ({
+vi.mock("~/contexts/ChessContext", () => ({
   useChess: () => mockStore,
 }));
 
@@ -83,7 +83,7 @@ describe("ChessEnd", () => {
   });
 
   it("calls resetGame when Play Again is clicked", () => {
-    const resetGame = mock();
+    const resetGame = vi.fn();
     setGameOver();
     mockStore.resetGame = resetGame;
     render(() => <ChessEnd />);

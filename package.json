@@ -11,19 +11,23 @@
     "oxfmt:check": "oxfmt --check",
     "oxfmt:write": "oxfmt --write",
     "lint:check": "bun run --parallel oxlint:check oxfmt:check",
-    "lint:write": "bun run --sequential oxlint:write oxfmt:write"
+    "lint:write": "bun run --sequential oxlint:write oxfmt:write",
+    "test": "vitest run"
   },
   "dependencies": {
     "solid-js": "^1"
   },
   "devDependencies": {
+    "@solidjs/testing-library": "^0",
     "@tailwindcss/vite": "^4",
     "husky": "^9",
+    "jsdom": "^29",
     "oxfmt": "^0",
     "oxlint": "^1",
     "tailwindcss": "^4",
     "typescript": "^6",
     "vite": "^8",
-    "vite-plugin-solid": "^2"
+    "vite-plugin-solid": "^2",
+    "vitest": "^4"
   }
 }

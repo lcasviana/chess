@@ -1,13 +1,13 @@
 import { render, screen } from "@solidjs/testing-library";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createMockStore } from "~/test-utils/mockChessContext";
 
 import { ChessStart } from "./ChessStart";
-import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 let mockStore = createMockStore();
 
-mock.module("~/contexts/ChessContext", () => ({
+vi.mock("~/contexts/ChessContext", () => ({
   useChess: () => mockStore,
 }));
 
@@ -60,7 +60,7 @@ describe("ChessStart", () => {
   });
 
   it("calls setPlayer with 'w' when white radio changes", () => {
-    const setPlayer = mock();
+    const setPlayer = vi.fn();
     mockStore.player = () => "b";
     mockStore.setPlayer = setPlayer;
     const { container } = render(() => <ChessStart />);
@@ -70,7 +70,7 @@ describe("ChessStart", () => {
   });
 
   it("calls setPlayer with 'b' when black radio changes", () => {
-    const setPlayer = mock();
+    const setPlayer = vi.fn();
     mockStore.setPlayer = setPlayer;
     const { container } = render(() => <ChessStart />);
     const blackRadio = container.querySelector('input[value="b"]') as HTMLInputElement;
@@ -79,7 +79,7 @@ describe("ChessStart", () => {
   });
 
   it("calls onGameStart when form is submitted", () => {
-    const onGameStart = mock();
+    const onGameStart = vi.fn();
     mockStore.onGameStart = onGameStart;
     const { container } = render(() => <ChessStart />);
     const form = container.querySelector("form") as HTMLFormElement;
