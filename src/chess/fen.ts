@@ -26,7 +26,7 @@ export function parseFen(fen: string): FenState {
   const parts = fen.trim().split(/\s+/);
   const ranks = parts[0].split("/");
 
-  const pieces: [Bitboard[], Bitboard[]] = [new Array(8).fill(0n), new Array(8).fill(0n)];
+  const pieces: [Bitboard[], Bitboard[]] = [Array.from({ length: 8 }, () => 0n), Array.from({ length: 8 }, () => 0n)];
 
   for (let r = 0; r < 8; r++) {
     const rankStr = ranks[r];

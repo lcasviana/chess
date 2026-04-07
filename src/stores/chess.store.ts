@@ -1,8 +1,8 @@
 import type { Accessor } from "solid-js";
 import { batch, createSignal } from "solid-js";
 
-import type { Color, Square } from "~/chess";
 import { Chess } from "~/chess";
+import type { Color, Square } from "~/chess";
 import { files } from "~/components/ChessCoordinates";
 import type { ChessPieceType } from "~/components/ChessPiece";
 import type { ChessSquareColor } from "~/components/ChessSquare";

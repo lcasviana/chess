@@ -1,11 +1,11 @@
 import { isAttacked } from "./attacks";
 import { sqBB } from "./constants";
-import type { Bitboard, Color, Move, Piece, Square } from "./types";
 import { MoveFlags } from "./types";
+import type { Bitboard, Color, Move, Piece, Square } from "./types";
 
 export const CastleFlag = { WK: 1, WQ: 2, BK: 4, BQ: 8 } as const;
 
-const CASTLING_MASK: number[] = new Array(64).fill(0b1111);
+const CASTLING_MASK: number[] = Array.from({ length: 64 }, () => 0b1111);
 CASTLING_MASK[0] &= ~CastleFlag.WQ;
 CASTLING_MASK[7] &= ~CastleFlag.WK;
 CASTLING_MASK[4] &= ~(CastleFlag.WK | CastleFlag.WQ);
@@ -29,8 +29,8 @@ const _rng = splitmix32(0xdeadbeef);
 const _rng32 = () => _rng();
 
 function makeZobristTable(size: number): [number[], number[]] {
-  const lo = new Array<number>(size);
-  const hi = new Array<number>(size);
+  const lo = Array.from<number>({ length: size });
+  const hi = Array.from<number>({ length: size });
   for (let i = 0; i < size; i++) {
     lo[i] = _rng32();
     hi[i] = _rng32();
@@ -73,7 +73,7 @@ export class ChessBoard {
   hashHi: number;
 
   constructor() {
-    this.pieces = [new Array(8).fill(0n), new Array(8).fill(0n)];
+    this.pieces = [Array.from({ length: 8 }, () => 0n), Array.from({ length: 8 }, () => 0n)];
     this.occupied = [0n, 0n];
     this.turn = 1; // White
     this.castling = 0;

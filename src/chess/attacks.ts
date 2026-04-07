@@ -1,10 +1,10 @@
 import { BB_FULL, NOT_FILE_A, NOT_FILE_AB, NOT_FILE_GH, NOT_FILE_H, sqBB } from "./constants";
-import type { Bitboard, Square } from "./types";
 import { Color, Piece } from "./types";
+import type { Bitboard, Square } from "./types";
 
-export const KNIGHT_ATTACKS: Bitboard[] = new Array(64);
-export const KING_ATTACKS: Bitboard[] = new Array(64);
-export const PAWN_ATTACKS: [Bitboard[], Bitboard[]] = [new Array(64), new Array(64)];
+export const KNIGHT_ATTACKS: Bitboard[] = Array.from({ length: 64 });
+export const KING_ATTACKS: Bitboard[] = Array.from({ length: 64 });
+export const PAWN_ATTACKS: [Bitboard[], Bitboard[]] = [Array.from({ length: 64 }), Array.from({ length: 64 })];
 
 for (let s = 0; s < 64; s++) {
   const b = sqBB(s);

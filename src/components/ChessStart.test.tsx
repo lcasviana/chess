@@ -1,10 +1,9 @@
 import { render, screen } from "@solidjs/testing-library";
 
-import { beforeEach, describe, expect, it, mock } from "bun:test";
-
 import { createMockStore } from "~/test-utils/mockChessContext";
 
 import { ChessStart } from "./ChessStart";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 let mockStore = createMockStore();
 

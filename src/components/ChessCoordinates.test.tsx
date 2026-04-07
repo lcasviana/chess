@@ -1,8 +1,7 @@
 import { render } from "@solidjs/testing-library";
 
-import { beforeEach, describe, expect, it } from "bun:test";
-
 import { ChessCoordinates, files, ranks } from "./ChessCoordinates";
+import { beforeEach, describe, expect, it } from "bun:test";
 
 describe("ChessCoordinates", () => {
   describe("files type", () => {

@@ -2,8 +2,8 @@ import { isAttacked } from "./attacks";
 import type { ChessBoard } from "./board";
 import { SQ_NAMES, fileOf, rankOf } from "./constants";
 import { generateLegal, lsb } from "./movegen";
-import type { Move } from "./types";
 import { MoveFlags, Piece } from "./types";
+import type { Move } from "./types";
 
 const PIECE_CHAR = [" ", "N", "B", "R", "Q", "K"];
 

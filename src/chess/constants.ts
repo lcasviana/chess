@@ -46,8 +46,8 @@ export const RANK_8 = 0xff00000000000000n;
 export const RANK_MASKS: Bitboard[] = [RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8];
 export const FILE_MASKS: Bitboard[] = [FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H];
 
-export const DIAG_MASKS: Bitboard[] = new Array(64);
-export const ANTI_DIAG_MASKS: Bitboard[] = new Array(64);
+export const DIAG_MASKS: Bitboard[] = Array.from({ length: 64 });
+export const ANTI_DIAG_MASKS: Bitboard[] = Array.from({ length: 64 });
 
 for (let sq = 0; sq < 64; sq++) {
   const file = sq & 7;

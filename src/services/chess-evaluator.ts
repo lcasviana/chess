@@ -117,7 +117,7 @@ export class ChessEvaluator {
     let tot = 0;
     let dev = 0;
     let kRank = -1;
-    const pawnFiles = new Array(8).fill(0);
+    const pawnFiles = Array.from({ length: 8 }, () => 0);
     const pawnRanks: number[][] = Array.from({ length: 8 }, () => []);
 
     for (let rank = 0; rank < 8; rank++) {

@@ -1,7 +1,6 @@
 import type { Component, JSX } from "solid-js";
 
 import { ChessGame } from "./components/ChessGame";
-
 import "./app.css";
 
 const App: Component = (): JSX.Element => {

@@ -1,8 +1,8 @@
 import type { Context, JSX, ParentComponent } from "solid-js";
 import { createContext, useContext } from "solid-js";
 
-import type { ChessStore } from "~/stores/chess.store";
 import { chessStore } from "~/stores/chess.store";
+import type { ChessStore } from "~/stores/chess.store";
 
 const ChessContext: Context<ChessStore | undefined> = createContext<ChessStore>(undefined);
 

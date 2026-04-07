@@ -2,8 +2,8 @@ import { KING_ATTACKS, KNIGHT_ATTACKS, PAWN_ATTACKS, bishopAttacks, isAttacked, 
 import { CastleFlag } from "./board";
 import type { ChessBoard } from "./board";
 import { RANK_1, RANK_2, RANK_4, RANK_5, RANK_7, RANK_8, sqBB } from "./constants";
-import type { Bitboard, Color, Move, Square } from "./types";
 import { MoveFlags, Piece } from "./types";
+import type { Bitboard, Color, Move, Square } from "./types";
 
 function lsb(bb: Bitboard): Square {
   const lo = Number(bb & 0xffffffffn);
@@ -16,7 +16,7 @@ function popLSB(bb: Bitboard): [Square, Bitboard] {
   return [lsb(bb), bb & (bb - 1n)];
 }
 
-const MOVE_POOL: Move[] = new Array(256);
+const MOVE_POOL: Move[] = Array.from({ length: 256 });
 let moveCount = 0;
 
 function push(from: Square, to: Square, piece: Piece, color: Color, captured: Piece, promotion: Piece, flags: number): void {

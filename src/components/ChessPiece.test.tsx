@@ -1,8 +1,7 @@
 import { render, screen } from "@solidjs/testing-library";
 
-import { describe, expect, it } from "bun:test";
-
 import { ChessPiece } from "./ChessPiece";
+import { describe, expect, it } from "bun:test";
 
 describe("ChessPiece", () => {
   it("renders svg with correct use href for white pawn", () => {

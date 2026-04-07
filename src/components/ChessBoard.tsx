@@ -1,8 +1,8 @@
 import type { Component, JSX } from "solid-js";
 import { For, createEffect, createSignal } from "solid-js";
 
-import type { Square } from "~/chess";
 import { SQUARES } from "~/chess";
+import type { Square } from "~/chess";
 import { useChess } from "~/contexts/ChessContext";
 
 import { ChessCoordinates } from "./ChessCoordinates";

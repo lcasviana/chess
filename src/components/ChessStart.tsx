@@ -5,8 +5,8 @@ import type { Color } from "~/chess";
 import { useChess } from "~/contexts/ChessContext";
 import { falsy } from "~/utils/constants";
 
-import type { ChessPieceType } from "./ChessPiece";
 import { ChessPiece, blackKing, colorNames, colors, whiteKing } from "./ChessPiece";
+import type { ChessPieceType } from "./ChessPiece";
 
 export const ChessStart: Component = (): JSX.Element => {
   const { gameStarted, player, setPlayer, onGameStart } = useChess();
