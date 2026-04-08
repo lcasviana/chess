@@ -4,8 +4,8 @@ import { For, Show, createMemo } from "solid-js";
 import { useChess } from "~/contexts/ChessContext";
 import { PIECE_VALUES, falsy } from "~/utils/constants";
 
-import { ChessPiece } from "./ChessPiece";
-import type { ChessPieceType } from "./ChessPiece";
+import { ChessPiece } from "../ChessPiece/ChessPiece";
+import type { ChessPieceType } from "../ChessPiece/ChessPiece";
 
 export const ChessCaptured: Component = (): JSX.Element => {
   const { capturedPieces, player, flip } = useChess();

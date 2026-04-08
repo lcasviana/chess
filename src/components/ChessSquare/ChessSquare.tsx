@@ -5,8 +5,8 @@ import type { Square } from "~/chess";
 import { useChess } from "~/contexts/ChessContext";
 import { getAdjacentSquare } from "~/utils/keyboard-navigation";
 
-import { ChessPiece, colorNames, pieceNames } from "./ChessPiece";
-import type { ChessPieceType } from "./ChessPiece";
+import { ChessPiece, colorNames, pieceNames } from "../ChessPiece/ChessPiece";
+import type { ChessPieceType } from "../ChessPiece/ChessPiece";
 
 export type ChessSquareColor = "light" | "dark" | null;
 export type ChessSquareInCheck = "check" | "checkmate" | null;

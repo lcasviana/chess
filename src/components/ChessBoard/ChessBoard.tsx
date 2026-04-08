@@ -5,9 +5,9 @@ import { SQUARES } from "~/chess";
 import type { Square } from "~/chess";
 import { useChess } from "~/contexts/ChessContext";
 
-import { ChessCoordinates } from "./ChessCoordinates";
-import { pieceNames } from "./ChessPiece";
-import { ChessSquare } from "./ChessSquare";
+import { ChessCoordinates } from "../ChessCoordinates/ChessCoordinates";
+import { pieceNames } from "../ChessPiece/ChessPiece";
+import { ChessSquare } from "../ChessSquare/ChessSquare";
 
 export const ChessBoard: Component = (): JSX.Element => {
   const { flip, getSquareColor, lastMove, board, turn, isCheck, isCheckmate } = useChess();

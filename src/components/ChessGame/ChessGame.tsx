@@ -2,10 +2,10 @@ import type { Component, JSX } from "solid-js";
 
 import { ChessProvider } from "~/contexts/ChessContext";
 
-import { ChessBoard } from "./ChessBoard";
-import { ChessCaptured } from "./ChessCaptured";
-import { ChessEnd } from "./ChessEnd";
-import { ChessStart } from "./ChessStart";
+import { ChessBoard } from "../ChessBoard/ChessBoard";
+import { ChessCaptured } from "../ChessCaptured/ChessCaptured";
+import { ChessEnd } from "../ChessEnd/ChessEnd";
+import { ChessStart } from "../ChessStart/ChessStart";
 
 export const ChessGame: Component = (): JSX.Element => {
   return (
