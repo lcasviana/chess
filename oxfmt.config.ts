@@ -4,10 +4,11 @@ export default defineConfig({
   htmlWhitespaceSensitivity: "strict",
   quoteProps: "consistent",
   sortImports: {
-    groups: [["react", "solid"], "external", "internal", "import", "unknown"],
+    groups: [["react", "solid", "vite"], "external", "builtin", "internal", ["index", "parent", "sibling", "subpath"], "style", "import", "unknown"],
     customGroups: [
       { groupName: "react", elementNamePattern: ["react", "react-*"] },
-      { groupName: "solid", elementNamePattern: ["solid-js", "@solidjs"] },
+      { groupName: "solid", elementNamePattern: ["solid-js", "@solidjs", "@solidjs/*"] },
+      { groupName: "vite", elementNamePattern: ["vite", "vite-*", "*/vite", "vitest", "vitest/*"] },
     ],
   },
   sortPackageJson: {
