@@ -3,16 +3,16 @@ import { CastleFlag } from "./board";
 import type { ChessBoard } from "./board";
 import { RANK_1, RANK_2, RANK_4, RANK_5, RANK_7, RANK_8, sqBB } from "./constants";
 import { MoveFlags, Piece } from "./types";
-import type { Bitboard, Color, Move, Square } from "./types";
+import type { BitBoard, Color, Move, Square } from "./types";
 
-function lsb(bb: Bitboard): Square {
+function lsb(bb: BitBoard): Square {
   const lo = Number(bb & 0xffffffffn);
   if (lo) return 31 - Math.clz32(lo & -lo);
   const hi = Number((bb >> 32n) & 0xffffffffn);
   return 32 + 31 - Math.clz32(hi & -hi);
 }
 
-function popLSB(bb: Bitboard): [Square, Bitboard] {
+function popLSB(bb: BitBoard): [Square, BitBoard] {
   return [lsb(bb), bb & (bb - 1n)];
 }
 
@@ -256,7 +256,7 @@ function pieceOnSquare(b: ChessBoard, color: Color, sq: Square): Piece {
   return Piece.None;
 }
 
-function generateCastling(b: ChessBoard, allOcc: Bitboard, moves: Move[]): void {
+function generateCastling(b: ChessBoard, allOcc: BitBoard, moves: Move[]): void {
   const color = b.turn;
   const opp = (color ^ 1) as Color;
 

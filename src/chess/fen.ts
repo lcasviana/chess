@@ -3,10 +3,10 @@ import type { ChessBoard } from "./board";
 import { SQ_INDEX, SQ_NAMES, sqOf } from "./constants";
 import { Color } from "./types";
 import type { Piece } from "./types";
-import type { Bitboard, Square } from "./types";
+import type { BitBoard, Square } from "./types";
 
 export type FenState = {
-  pieces: [Bitboard[], Bitboard[]];
+  pieces: [BitBoard[], BitBoard[]];
   turn: Color;
   castling: number;
   enPassant: Square | -1;
@@ -26,7 +26,7 @@ export function parseFen(fen: string): FenState {
   const parts = fen.trim().split(/\s+/);
   const ranks = parts[0].split("/");
 
-  const pieces: [Bitboard[], Bitboard[]] = [Array.from({ length: 8 }, () => 0n), Array.from({ length: 8 }, () => 0n)];
+  const pieces: [BitBoard[], BitBoard[]] = [Array.from({ length: 8 }, () => 0n), Array.from({ length: 8 }, () => 0n)];
 
   for (let r = 0; r < 8; r++) {
     const rankStr = ranks[r];

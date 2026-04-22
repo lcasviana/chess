@@ -1,7 +1,7 @@
 import { isAttacked } from "./attacks";
 import { sqBB } from "./constants";
 import { MoveFlags } from "./types";
-import type { Bitboard, Color, Move, Piece, Square } from "./types";
+import type { BitBoard, Color, Move, Piece, Square } from "./types";
 
 export const CastleFlag = { WK: 1, WQ: 2, BK: 4, BQ: 8 } as const;
 
@@ -61,8 +61,8 @@ type HistoryEntry = {
 };
 
 export class ChessBoard {
-  pieces: [Bitboard[], Bitboard[]];
-  occupied: [Bitboard, Bitboard];
+  pieces: [BitBoard[], BitBoard[]];
+  occupied: [BitBoard, BitBoard];
   turn: Color;
   castling: number;
   enPassant: Square | -1;
@@ -85,7 +85,7 @@ export class ChessBoard {
     this.hashHi = 0;
   }
 
-  allOccupied(): Bitboard {
+  allOccupied(): BitBoard {
     return this.occupied[0] | this.occupied[1];
   }
 

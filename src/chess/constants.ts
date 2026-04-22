@@ -1,6 +1,6 @@
-import type { Bitboard, Square } from "./types";
+import type { BitBoard, Square } from "./types";
 
-export const sqBB = (s: Square): Bitboard => 1n << BigInt(s);
+export const sqBB = (s: Square): BitBoard => 1n << BigInt(s);
 export const fileOf = (s: Square): number => s & 7;
 export const rankOf = (s: Square): number => s >> 3;
 export const sqOf = (file: number, rank: number): Square => rank * 8 + file;
@@ -43,11 +43,11 @@ export const RANK_6 = RANK_1 << 40n;
 export const RANK_7 = RANK_1 << 48n;
 export const RANK_8 = 0xff00000000000000n;
 
-export const RANK_MASKS: Bitboard[] = [RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8];
-export const FILE_MASKS: Bitboard[] = [FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H];
+export const RANK_MASKS: BitBoard[] = [RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8];
+export const FILE_MASKS: BitBoard[] = [FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H];
 
-export const DIAG_MASKS: Bitboard[] = Array.from({ length: 64 });
-export const ANTI_DIAG_MASKS: Bitboard[] = Array.from({ length: 64 });
+export const DIAG_MASKS: BitBoard[] = Array.from({ length: 64 });
+export const ANTI_DIAG_MASKS: BitBoard[] = Array.from({ length: 64 });
 
 for (let sq = 0; sq < 64; sq++) {
   const file = sq & 7;

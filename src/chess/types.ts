@@ -5,7 +5,7 @@ export const Color = { White: 1, Black: 0 } as const;
 export type Color = (typeof Color)[keyof typeof Color];
 
 export type Square = number;
-export type Bitboard = bigint;
+export type BitBoard = bigint;
 
 export const MoveFlags = {
   Normal: 0,

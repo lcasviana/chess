@@ -1,10 +1,10 @@
 import { BB_FULL, NOT_FILE_A, NOT_FILE_AB, NOT_FILE_GH, NOT_FILE_H, sqBB } from "./constants";
 import { Color, Piece } from "./types";
-import type { Bitboard, Square } from "./types";
+import type { BitBoard, Square } from "./types";
 
-export const KNIGHT_ATTACKS: Bitboard[] = Array.from({ length: 64 });
-export const KING_ATTACKS: Bitboard[] = Array.from({ length: 64 });
-export const PAWN_ATTACKS: [Bitboard[], Bitboard[]] = [Array.from({ length: 64 }), Array.from({ length: 64 })];
+export const KNIGHT_ATTACKS: BitBoard[] = Array.from({ length: 64 });
+export const KING_ATTACKS: BitBoard[] = Array.from({ length: 64 });
+export const PAWN_ATTACKS: [BitBoard[], BitBoard[]] = [Array.from({ length: 64 }), Array.from({ length: 64 })];
 
 for (let s = 0; s < 64; s++) {
   const b = sqBB(s);
@@ -33,7 +33,7 @@ for (let s = 0; s < 64; s++) {
     ((b >> 9n) & NOT_FILE_H);
 }
 
-function fillNorth(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillNorth(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL;
   gen |= (gen << 8n) & empty;
   gen |= (gen << 8n) & empty;
@@ -44,7 +44,7 @@ function fillNorth(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen << 8n) & BB_FULL;
 }
 
-function fillSouth(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillSouth(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL;
   gen |= (gen >> 8n) & empty;
   gen |= (gen >> 8n) & empty;
@@ -55,7 +55,7 @@ function fillSouth(gen: Bitboard, occ: Bitboard): Bitboard {
   return gen >> 8n;
 }
 
-function fillEast(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillEast(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL & NOT_FILE_A;
   gen |= (gen << 1n) & empty;
   gen |= (gen << 1n) & empty;
@@ -66,7 +66,7 @@ function fillEast(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen << 1n) & NOT_FILE_A;
 }
 
-function fillWest(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillWest(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL & NOT_FILE_H;
   gen |= (gen >> 1n) & empty;
   gen |= (gen >> 1n) & empty;
@@ -77,7 +77,7 @@ function fillWest(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen >> 1n) & NOT_FILE_H;
 }
 
-function fillNE(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillNE(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL & NOT_FILE_A;
   gen |= (gen << 9n) & empty;
   gen |= (gen << 9n) & empty;
@@ -88,7 +88,7 @@ function fillNE(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen << 9n) & NOT_FILE_A;
 }
 
-function fillNW(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillNW(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL & NOT_FILE_H;
   gen |= (gen << 7n) & empty;
   gen |= (gen << 7n) & empty;
@@ -99,7 +99,7 @@ function fillNW(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen << 7n) & NOT_FILE_H;
 }
 
-function fillSE(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillSE(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL & NOT_FILE_A;
   gen |= (gen >> 7n) & empty;
   gen |= (gen >> 7n) & empty;
@@ -110,7 +110,7 @@ function fillSE(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen >> 7n) & NOT_FILE_A;
 }
 
-function fillSW(gen: Bitboard, occ: Bitboard): Bitboard {
+function fillSW(gen: BitBoard, occ: BitBoard): BitBoard {
   const empty = ~occ & BB_FULL & NOT_FILE_H;
   gen |= (gen >> 9n) & empty;
   gen |= (gen >> 9n) & empty;
@@ -121,25 +121,25 @@ function fillSW(gen: Bitboard, occ: Bitboard): Bitboard {
   return (gen >> 9n) & NOT_FILE_H;
 }
 
-export function rookAttacks(sq: Square, occ: Bitboard): Bitboard {
+export function rookAttacks(sq: Square, occ: BitBoard): BitBoard {
   const b = sqBB(sq);
   return fillNorth(b, occ) | fillSouth(b, occ) | fillEast(b, occ) | fillWest(b, occ);
 }
 
-export function bishopAttacks(sq: Square, occ: Bitboard): Bitboard {
+export function bishopAttacks(sq: Square, occ: BitBoard): BitBoard {
   const b = sqBB(sq);
   return fillNE(b, occ) | fillNW(b, occ) | fillSE(b, occ) | fillSW(b, occ);
 }
 
-export function queenAttacks(sq: Square, occ: Bitboard): Bitboard {
+export function queenAttacks(sq: Square, occ: BitBoard): BitBoard {
   return rookAttacks(sq, occ) | bishopAttacks(sq, occ);
 }
 
 export type AttackBoard = {
-  pieces: [Bitboard[], Bitboard[]];
+  pieces: [BitBoard[], BitBoard[]];
 };
 
-export function isAttacked(sq: Square, byColor: 0 | 1, board: AttackBoard, allOcc: Bitboard): boolean {
+export function isAttacked(sq: Square, byColor: 0 | 1, board: AttackBoard, allOcc: BitBoard): boolean {
   const bp = board.pieces[byColor];
 
   if (KNIGHT_ATTACKS[sq] & bp[Piece.Knight]) return true;
