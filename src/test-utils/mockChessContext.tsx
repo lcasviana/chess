@@ -1,6 +1,6 @@
 import type { Square } from "~/chess";
-import type { ChessPieceType } from "~/components/ChessPiece";
-import type { ChessSquareColor } from "~/components/ChessSquare";
+import type { ChessPieceType } from "~/components/ChessPiece/ChessPiece";
+import type { ChessSquareColor } from "~/components/ChessSquare/ChessSquare";
 import type { ChessStore } from "~/stores/chess.store";
 
 export function createMockStore(overrides: Partial<ChessStore> = {}): ChessStore {

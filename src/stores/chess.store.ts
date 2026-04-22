@@ -3,9 +3,9 @@ import { batch, createSignal } from "solid-js";
 
 import { Chess } from "~/chess";
 import type { Color, Square } from "~/chess";
-import { files } from "~/components/ChessCoordinates";
-import type { ChessPieceType } from "~/components/ChessPiece";
-import type { ChessSquareColor } from "~/components/ChessSquare";
+import { files } from "~/components/ChessCoordinates/ChessCoordinates";
+import type { ChessPieceType } from "~/components/ChessPiece/ChessPiece";
+import type { ChessSquareColor } from "~/components/ChessSquare/ChessSquare";
 import { getChessBotWorkerManager } from "~/services/chess-bot-worker-manager";
 
 let storeInstance: ChessStore | null = null;
