@@ -7,3 +7,6 @@ Thumbs.db
 
 # Build
 /dist/
+
+# Engine
+/public/engine/

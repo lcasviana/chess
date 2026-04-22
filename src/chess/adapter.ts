@@ -83,7 +83,11 @@ export type ChessMove = {
   san: string;
 };
 
-export const SQUARES: ChessSquare[] = SQ_NAMES as ChessSquare[];
+export const SQUARES: ChessSquare[] = Array.from({ length: 64 }, (_, i) => {
+  const rank = 7 - Math.floor(i / 8);
+  const file = i % 8;
+  return SQ_NAMES[rank * 8 + file];
+}) as ChessSquare[];
 
 const COLOR_TO_STR: ChessColor[] = ["b", "w"];
 const PIECE_TO_STR: ChessPieceSymbol[] = ["p", "n", "b", "r", "q", "k", "p", "p"];

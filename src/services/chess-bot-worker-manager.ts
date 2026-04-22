@@ -1,51 +1,73 @@
 import type { Move } from "~/chess";
 
-import type { BotConfig } from "./chess-bot";
+type Resolver = (move: Move | null) => void;
 
-export class ChessBotWorkerManager {
-  private worker: Worker | null = null;
-  private pending = new Map<number, { resolve: (move: Move | null) => void; reject: (error: Error) => void }>();
-  private nextId = 0;
+class StockfishWorkerManager {
+  private worker: Worker;
+  private ready: Promise<void>;
+  private resolver: Resolver | null = null;
 
   constructor() {
-    this.initWorker();
+    this.worker = new Worker("/engine/stockfish-18.js");
+
+    this.ready = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Stockfish init timeout")), 10000);
+
+      const init = (e: MessageEvent<string>) => {
+        if (typeof e.data !== "string") return;
+        if (e.data === "readyok") {
+          clearTimeout(timeout);
+          this.worker.removeEventListener("message", init);
+          this.worker.addEventListener("message", this.onMessage);
+          resolve();
+        } else if (e.data === "uciok") {
+          this.worker.postMessage("isready");
+        }
+      };
+
+      this.worker.addEventListener("message", init);
+      this.worker.addEventListener("error", (e) => {
+        clearTimeout(timeout);
+        reject(new Error(e.message));
+      });
+      this.worker.postMessage("uci");
+    });
   }
 
-  private initWorker(): void {
-    this.worker = new Worker(new URL("../workers/chess-bot.worker.ts", import.meta.url), { type: "module" });
-    this.worker.onmessage = (e: MessageEvent<{ id: number; move: Move | null; error?: string }>) => {
-      const { id, move, error } = e.data;
-      const p = this.pending.get(id);
-      if (!p) return;
-      if (error) p.reject(new Error(error));
-      else p.resolve(move);
-      this.pending.delete(id);
-    };
-  }
+  private onMessage = (e: MessageEvent<string>) => {
+    if (typeof e.data !== "string" || !e.data.startsWith("bestmove")) return;
+    const parts = e.data.split(" ");
+    const raw = parts[1];
+    if (!raw || raw === "(none)") {
+      this.resolver?.(null);
+    } else {
+      this.resolver?.({
+        from: raw.slice(0, 2),
+        to: raw.slice(2, 4),
+        promotion: raw.length === 5 ? raw[4] : undefined,
+      } as Move);
+    }
+    this.resolver = null;
+  };
 
-  async getBestMove(fen: string, config?: Partial<BotConfig>): Promise<Move | null> {
-    if (!this.worker) throw new Error("Worker not initialized");
-    const id = this.nextId++;
-    return new Promise<Move | null>((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      this.worker!.postMessage({ id, fen, config });
+  async getBestMove(fen: string): Promise<Move | null> {
+    await this.ready;
+    return new Promise<Move | null>((resolve) => {
+      this.resolver = resolve;
+      this.worker.postMessage(`position fen ${fen}`);
+      this.worker.postMessage("go movetime 500");
     });
   }
 
   terminate(): void {
-    if (this.worker) {
-      this.worker.terminate();
-      this.worker = null;
-    }
-    this.pending.forEach((p) => p.reject(new Error("Worker terminated")));
-    this.pending.clear();
+    this.worker.terminate();
   }
 }
 
-let instance: ChessBotWorkerManager | null = null;
+let instance: StockfishWorkerManager | null = null;
 
-export function getChessBotWorkerManager(): ChessBotWorkerManager {
-  if (!instance) instance = new ChessBotWorkerManager();
+export function getChessBotWorkerManager(): StockfishWorkerManager {
+  if (!instance) instance = new StockfishWorkerManager();
   return instance;
 }
 
